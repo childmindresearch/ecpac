@@ -201,20 +201,33 @@ def main(
 
     # Subjects
 
-    if arg_subject is None:
-        subjects = [path.stem for path in path_input.iterdir() if path.is_dir()]
+    while True:
 
-        subjects = click.prompt(
-            click.style(f'Subjects (separate with space)', fg='blue'),
-            default=' '.join(subjects)
-        ).split(' ')
+        if arg_subject is None:
+            subjects = [path.stem for path in path_input.iterdir() if path.is_dir()]
 
-    else:
-        subjects = arg_subject.split(' ')
+            subjects = click.prompt(
+                click.style(f'Subjects (separate with space)', fg='blue'),
+                default=' '.join(subjects)
+            ).split(' ')
 
+        else:
+            subjects = arg_subject.split(' ')
+
+        not_exist = []
         for sub in subjects:
             if not (path_input / sub).exists():
-                return
+                arg_subject = None
+                not_exist.append(sub)
+        if len(not_exist) == 0:
+            break
+
+        not_exist_str = ' '.join(f'"{sub}"' for sub in not_exist)
+        click.secho(
+            f'Error: Some subject directories do not exist in input dir!\n'
+            f'Input dir: "{path_input}"\n'
+            f'Missing subjects: {not_exist_str}',
+            fg='red')
 
     # Output directory
 
