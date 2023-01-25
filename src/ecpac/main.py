@@ -11,7 +11,7 @@ import click
 
 ID_PROJECT = 'med220004p'
 USER_NAME = os.getlogin()
-ID_PIPELINE_DEFAULT = 'cpac-default-pipeline'
+ID_PIPELINE_DEFAULT = 'default'
 FILENAME_JOB = 'job.sh'
 FOLDERNAME_OUTPUT = 'output'
 
@@ -253,6 +253,7 @@ def main(
     fs_plans: List[FsPlan] = []
     job_paths = []
     example_job = None
+    example_job_path = None
     for pipe, sub in itertools.product(pipeline_ids, subjects):
         path_out = path_output / run_id / pipe / sub
         path_out_full = path_out / 'output'
@@ -291,6 +292,7 @@ def main(
 
         if example_job is None:
             example_job = job
+            example_job_path = path_job
 
     # Plan executor file
 
@@ -330,6 +332,13 @@ def main(
             '\U0001f680' + click.style('Launch now?', bg='blue'), default=None
     ):
         subprocess.run([path_executor], shell=True)
+
+        click.secho(f'Jobs were executed!', bg='blue')
+        click.secho(f'Some commands you might find helpful:', fg='blue')
+        click.secho(f'Follow job output:', fg='blue')
+        click.secho(f'tail -f {example_job_path}')
+        click.secho(f'List all running jobs:', fg='blue')
+        click.secho(f'squeue -u {USER_NAME}')
 
 
 BASH_TEMPLATE_JOB = """\
