@@ -276,7 +276,7 @@ def main(
             image=path_image.absolute(),
             threads=res_threads,
             duration_str=timedelta_to_hms(res_duration),
-            memory_mb=int(res_memory_gb * 1024),
+            memory_mb=int(res_memory_gb * 1000),
             cpac_threads=max(res_threads - 1, 1),
             cpac_memory_gb=max(res_memory_gb - 1, 1),
             extra_cpac_args=' '.join(extra_args)
