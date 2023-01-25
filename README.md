@@ -8,3 +8,4 @@
 - More validation
 - Patch cpac from git+URL directly
 - optionally wrap jobs in hpc_benchmark
+- Print full command after interactive use 
