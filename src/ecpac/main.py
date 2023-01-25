@@ -242,7 +242,7 @@ def main(
 
     extra_cpac_args = option_or_prompt(
         opt=arg_extra_cpac_args,
-        prompt=click.style('Extra args to pass to C-PAC? (E.g. --save_pipeline)', fg='blue'),
+        prompt=click.style('Extra args to pass to C-PAC? (E.g. --save_workflow)', fg='blue'),
         default=''
     )
 
