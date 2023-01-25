@@ -253,7 +253,7 @@ def main(
     fs_plans: List[FsPlan] = []
     job_paths = []
     example_job = None
-    example_job_path = None
+    example_path_stdout_log = None
     for pipe, sub in itertools.product(pipeline_ids, subjects):
         path_out = path_output / run_id / pipe / sub
         path_out_full = path_out / 'output'
@@ -272,7 +272,7 @@ def main(
             wd=path_out.absolute(),
             subject=sub,
             pipeline=pipe,
-            path_input=(path_input / sub).absolute(),
+            path_input=path_input.absolute(),
             path_output=path_out_full.absolute(),
             image=path_image.absolute(),
             threads=res_threads,
@@ -292,7 +292,7 @@ def main(
 
         if example_job is None:
             example_job = job
-            example_job_path = path_job
+            example_path_stdout_log = path_stdout_log
 
     # Plan executor file
 
@@ -335,9 +335,9 @@ def main(
 
         click.secho(f'Jobs were executed!', bg='blue')
         click.secho(f'Some commands you might find helpful:', fg='blue')
-        click.secho(f'Follow job output:', fg='blue')
-        click.secho(f'tail -f {example_job_path}')
-        click.secho(f'List all running jobs:', fg='blue')
+        click.secho(f'  Follow job output:', fg='blue')
+        click.secho(f'tail -f {example_path_stdout_log}')
+        click.secho(f'  List all running jobs:', fg='blue')
         click.secho(f'squeue -u {USER_NAME}')
 
 
