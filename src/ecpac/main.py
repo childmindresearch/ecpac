@@ -66,6 +66,19 @@ def option_or_prompt(opt: Optional[str], prompt: str, default: Optional[str] = N
     return click.prompt(prompt, default=default, type=str)
 
 
+def option_or_confirm(opt: Optional[bool], prompt: str, default: Optional[bool] = False) -> bool:
+    if opt is not None:
+        return opt
+    return click.confirm(prompt, default=default)
+
+
+def option_truthy(opt: Optional[str]) -> Optional[bool]:
+    if opt is None:
+        return None
+    opt_lower = opt.lower()
+    return opt_lower == 'true' or opt_lower == 'y' or opt_lower == 'yes' or opt_lower == '1'
+
+
 def timedelta_to_hms(t: timedelta) -> str:
     s = t.total_seconds()
     return f'{s // 3600:02.0f}:{s % 3600 // 60:02.0f}:{s % 60:02.0f}'
@@ -89,8 +102,8 @@ def _cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
 @click.option('-m', '--memory_gb', 'arg_memory_gb', type=str)
 @click.option('-t', '--threads', 'arg_threads', type=str)
 @click.option('-d', '--duration_h', 'arg_duration_h', type=str)
-@click.option('-w', '--save_working_dir', 'arg_save_working_dir',
-              type=str)  # todo: this + save pipeline (maybe 'extra_cpac_args'?)
+@click.option('-w', '--save_working_dir', 'arg_save_working_dir', type=str)
+@click.option('-x', '--extra_cpac_args', 'arg_extra_cpac_args', type=str)
 def main(
         arg_input: Optional[str] = None,
         arg_output: Optional[str] = None,
@@ -102,7 +115,8 @@ def main(
         arg_memory_gb: Optional[str] = None,
         arg_threads: Optional[str] = None,
         arg_duration_h: Optional[str] = None,
-        arg_save_working_dir: Optional[str] = None
+        arg_save_working_dir: Optional[str] = None,
+        arg_extra_cpac_args: Optional[str] = None
 ):
     if not PSC_PROJECT_USER.exists():
         click.secho(f'Error: User directory does not exist! "{PSC_PROJECT_USER}" (This script is meant to run on PSC)',
@@ -216,6 +230,22 @@ def main(
         default=ID_PIPELINE_DEFAULT
     ).split(' ')
 
+    # Save C-PAC working dir
+
+    save_working_dir = option_or_confirm(
+        opt=option_truthy(arg_save_working_dir),
+        default=False,
+        prompt=click.style('Save working directory', fg='blue')
+    )
+
+    # Extra cpac args
+
+    extra_cpac_args = option_or_prompt(
+        opt=arg_extra_cpac_args,
+        prompt=click.style('Extra args to pass to C-PAC? (E.g. --save_pipeline)', fg='blue'),
+        default=''
+    )
+
     # Plan out dirs and job files
 
     fs_plans: List[FsPlan] = []
@@ -224,8 +254,13 @@ def main(
     for pipe, sub in itertools.product(pipeline_ids, subjects):
         path_out = path_output / run_id / pipe / sub
         path_out_full = path_out / 'output'
+        path_out_wd = path_out / 'wd'
         path_job = path_out / "run_job.sh"
         path_stdout_log = path_out / "out.log"
+
+        extra_args: List[str] = [extra_cpac_args]
+        if save_working_dir:
+            extra_args.append(f'--save_working_dir {path_out_wd.absolute()}')
 
         job = BASH_TEMPLATE_JOB.format(
             job_name=f'{run_id}_{pipe}_{sub}',
@@ -241,11 +276,15 @@ def main(
             duration_str=timedelta_to_hms(res_duration),
             memory_mb=int(res_memory_gb * 1024),
             cpac_threads=max(res_threads - 1, 1),
-            cpac_memory_gb=max(res_memory_gb - 1, 1)
+            cpac_memory_gb=max(res_memory_gb - 1, 1),
+            extra_cpac_args=' '.join(extra_args)
         )
 
         fs_plans.append(FsPlan(path=path_job, is_file=True, contents_text=job, make_executable=True))
         fs_plans.append(FsPlan(path=path_out_full, is_file=False))
+        if save_working_dir:
+            fs_plans.append(FsPlan(path=path_out_wd, is_file=False))
+
         job_paths.append(path_job)
 
         if example_job is None:
@@ -259,7 +298,7 @@ def main(
 
     fs_plans.append(FsPlan(path=path_executor, is_file=True, contents_text=executor, make_executable=True))
 
-    # User feedback
+    # User sanity check
 
     click.secho(f'The following directories and files will be created:', bg='blue')
 
@@ -316,6 +355,7 @@ singularity run \
 --mem_gb {cpac_memory_gb} \
 --participant_label {subject} \
 --preconfig {pipeline} \
+{extra_cpac_args} \
 """
 # --save_working_dir \
 
