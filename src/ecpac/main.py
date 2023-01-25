@@ -92,18 +92,20 @@ def _cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
 
 
 @click.command()
-@click.option('-i', '--input', 'arg_input', type=str, help='Input directory.')
-@click.option('-o', '--output', 'arg_output', type=str)
+@click.option('-i', '--input', 'arg_input', type=str, help='Input directory (contains subject folders).')
+@click.option('-o', '--output', 'arg_output', type=str, help='Output directory (contains runs).')
 @click.option('-r', '--run', 'arg_run', type=str, help='Run name.')
-@click.option('-g', '--image', 'arg_image', type=str)
-@click.option('-s', '--subject', 'arg_subject', type=str)
-@click.option('-p', '--pipeline', 'arg_pipeline', type=str)
-@click.option('-c', '--cpac', 'arg_cpac', type=str)
-@click.option('-m', '--memory_gb', 'arg_memory_gb', type=str)
-@click.option('-t', '--threads', 'arg_threads', type=str)
-@click.option('-d', '--duration_h', 'arg_duration_h', type=str)
-@click.option('-w', '--save_working_dir', 'arg_save_working_dir', type=str)
-@click.option('-x', '--extra_cpac_args', 'arg_extra_cpac_args', type=str)
+@click.option('-g', '--image', 'arg_image', type=str, help='Singularity image file (.sif).')
+@click.option('-s', '--subject', 'arg_subject', type=str, help='List of subjects, separate via whitespace.')
+@click.option('-p', '--pipeline', 'arg_pipeline', type=str, help='List of pipeline presets, separate via whitespace.')
+@click.option('-c', '--cpac', 'arg_cpac', type=str, help='C-PAC folder for patching image.')
+@click.option('-m', '--memory_gb', 'arg_memory_gb', type=str, help='Memory (GB) for each job.')
+@click.option('-t', '--threads', 'arg_threads', type=str, help='Number of threads/cores for each job.')
+@click.option('-d', '--duration_h', 'arg_duration_h', type=str, help='Maximum job runtime (in hours).')
+@click.option('-w', '--save_working_dir', 'arg_save_working_dir', type=str,
+              help='Should the C-PAC working dir be saved.')
+@click.option('-x', '--extra_cpac_args', 'arg_extra_cpac_args', type=str,
+              help='Additional arguments that will be passed to C-PAC.')
 def main(
         arg_input: Optional[str] = None,
         arg_output: Optional[str] = None,
