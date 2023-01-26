@@ -379,7 +379,7 @@ singularity run \
 --mem_gb {cpac_memory_gb} \
 --participant_label {subject} \
 --preconfig {pipeline} \
-{extra_cpac_args} \
+{extra_cpac_args} 
 """
 # --save_working_dir \
 
@@ -387,7 +387,7 @@ singularity run \
 BASH_TEMPLATE_JOB_CPAC_BIN = """\
 -B {cpac_bin}/CPAC:/code/CPAC \
 -B {cpac_bin}/dev/docker_data/run.py:/code/run.py \
--B {cpac_bin}/dev/docker_data:/cpac_resources" \
+-B {cpac_bin}/dev/docker_data:/cpac_resources \
 """
 
 if __name__ == '__main__':
