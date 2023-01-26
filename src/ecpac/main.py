@@ -385,9 +385,9 @@ singularity run \
 
 
 BASH_TEMPLATE_JOB_CPAC_BIN = """\
--B {cpac_bin}:/code \
+-B {cpac_bin}/CPAC:/code/CPAC \
 -B {cpac_bin}/dev/docker_data/run.py:/code/run.py \
--B {cpac_bin}/dev/docker_data/run-with-freesurfer.sh:/code/run-with-freesurfer.sh \
+-B {cpac_bin}/dev/docker_data:/cpac_resources" \
 """
 
 if __name__ == '__main__':
