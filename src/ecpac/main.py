@@ -20,6 +20,8 @@ PSC_PROJECT_USER = PSC_PROJECT / USER_NAME
 PSC_OUTPUT_DEFAULT = PSC_PROJECT_USER / 'ecpac_runs'
 PSC_IMAGE_DEFAULT = PSC_PROJECT_USER / 'images/cpac.sif'
 
+CPAC_ANALYSIS_LEVELS = ('participant', 'group', 'test_config')
+ANALYSIS_LEVEL_DEFAULT = 'participant'
 
 @dataclasses.dataclass
 class FsPlan:
@@ -98,6 +100,8 @@ def _cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
 @click.option('-g', '--image', 'arg_image', type=str, help='Singularity image file (.sif).')
 @click.option('-s', '--subject', 'arg_subject', type=str, help='List of subjects, separate via whitespace.')
 @click.option('-p', '--pipeline', 'arg_pipeline', type=str, help='List of pipeline presets, separate via whitespace.')
+@click.option('-a', '--analysis_level', 'arg_analysis_level', type=str, help='Analysis level ("participant", "group", '
+                                                                             '"test_config").')
 @click.option('-c', '--cpac', 'arg_cpac', type=str, help='C-PAC folder for patching image.')
 @click.option('-m', '--memory_gb', 'arg_memory_gb', type=str, help='Memory (GB) for each job.')
 @click.option('-t', '--threads', 'arg_threads', type=str, help='Number of threads/cores for each job.')
@@ -113,6 +117,7 @@ def main(
         arg_image: Optional[str] = None,
         arg_subject: Optional[str] = None,
         arg_pipeline: Optional[str] = None,
+        arg_analysis_level: Optional[str] = None,
         arg_cpac: Optional[str] = None,
         arg_memory_gb: Optional[str] = None,
         arg_threads: Optional[str] = None,
@@ -165,6 +170,7 @@ def main(
 
         if _cli_check_exist_file(path_image, label='Singularity image'):
             break
+        arg_image = None
 
     # C-PAC patching
 
@@ -245,6 +251,24 @@ def main(
         default=ID_PIPELINE_DEFAULT
     ).split(' ')
 
+    # Analysis level
+
+    while True:
+
+        analysis_level = option_or_prompt(
+            opt=arg_analysis_level,
+            prompt=click.style(f'Analysis level {CPAC_ANALYSIS_LEVELS}', fg='blue'),
+            default=ANALYSIS_LEVEL_DEFAULT
+        )
+
+        if analysis_level in CPAC_ANALYSIS_LEVELS:
+            break
+
+        click.secho(
+            f'Error: Analysis level invalid ({analysis_level})\n'
+            f'Must be one of: "{CPAC_ANALYSIS_LEVELS}"',
+            fg='red')
+
     # Save C-PAC working dir
 
     save_working_dir = option_or_confirm(
@@ -293,7 +317,8 @@ def main(
             memory_mb=int(res_memory_gb * 1000),
             cpac_threads=max(res_threads - 1, 1),
             cpac_memory_gb=max(res_memory_gb - 1, 1),
-            extra_cpac_args=' '.join(extra_args)
+            extra_cpac_args=' '.join(extra_args),
+            analysis_level=analysis_level
         )
 
         fs_plans.append(FsPlan(path=path_job, is_file=True, contents_text=job, make_executable=True))
@@ -373,7 +398,7 @@ singularity run \
 {cpac_bin_opt} \
 -B {path_input}:{path_input}:ro \
 -B {path_output}:{path_output} \
-{image} {path_input} {path_output} participant \
+{image} {path_input} {path_output} {analysis_level} \
 --skip_bids_validator \
 --n_cpus {cpac_threads} \
 --mem_gb {cpac_memory_gb} \
