@@ -342,14 +342,14 @@ def main(
         if arg_subject is None:
             subjects = [path.stem for path in path_input.iterdir() if path.is_dir()]
 
-            subjects = click.prompt(
+            subjects = re.split('\s+', click.prompt(
                 ICON_SUBJECT
                 + click.style(f"Subjects (separate with space)", fg="blue"),
                 default=" ".join(subjects),
-            ).split(" ")
+            ))
 
         else:
-            subjects = arg_subject.split(" ")
+            subjects = re.split('\s+', arg_subject)
 
         not_exist = []
         for sub in subjects:
@@ -379,12 +379,12 @@ def main(
 
     # Pipeline configs
 
-    pipeline_ids = option_or_prompt(
+    pipeline_ids = re.split('\s+', option_or_prompt(
         opt=arg_pipeline,
         prompt=ICON_PIPELINE
         + click.style("Pipelines (separate with space)", fg="blue"),
         default=ID_PIPELINE_DEFAULT,
-    ).split(" ")
+    ))
 
     preconfig_ids = []
     pipeline_config_files = []
