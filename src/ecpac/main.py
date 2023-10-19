@@ -386,8 +386,8 @@ def main(
         default=ID_PIPELINE_DEFAULT,
     ))
 
-    preconfig_ids = []
-    pipeline_config_files = []
+    preconfig_ids: List[str] = []
+    pipeline_config_files: List[str] = []
     for pipe in pipeline_ids:
         if pipe in CPAC_PRECONFIGS:
             preconfig_ids.append(pipe)
@@ -459,7 +459,7 @@ def main(
     for idx, (pipe, sub) in enumerate(itertools.product(pipeline_ids, subjects)):
         pipe_id = pipe if use_preconfigs else f"{idx:03d}_{pl.Path(pipe).stem}"
 
-        path_out = path_output / run_id / pipe / sub
+        path_out = path_output / run_id / pipe_id / sub
         path_out_full = path_out / "output"
         path_out_wd = path_out / "wd"
         path_job = path_out / "run_job.sh"
@@ -470,7 +470,7 @@ def main(
             extra_args.append(f"--save_working_dir {path_out_wd.absolute()}")
 
         job = BASH_TEMPLATE_JOB.format(
-            job_name=f"{run_id}_{pipe}_{sub}",
+            job_name=f"{run_id}_{pipe_id}_{sub}",
             stdout_file=path_stdout_log,
             cpac_bin_opt=""
             if not patch_cpac
@@ -588,8 +588,8 @@ singularity run \
 {extra_cpac_args} 
 """
 
-BASH_TEMPLATE_PIPELINE_CONFIG_FILE = "--preconfig {pipeline}"
-BASH_TEMPLATE_PIPELINE_PRECONFIG = "--pipeline-file {pipeline}"
+BASH_TEMPLATE_PIPELINE_PRECONFIG = "--preconfig {pipeline}"
+BASH_TEMPLATE_PIPELINE_CONFIG_FILE = "--pipeline-file {pipeline}"
 
 
 BASH_TEMPLATE_JOB_CPAC_BIN = """\
