@@ -15,7 +15,7 @@ pip install git+https://github.com/cmi-dair/ecpac.git
 ```sh
 module load anaconda3/2022.10
 conda activate ecpac
-ecpac # or: 'ecpac --help' for non-interactive use 
+ecpac # or: 'ecpac --help' for non-interactive use
 ```
 
 ## Update
@@ -35,4 +35,4 @@ pip uninstall -y ecpac && sleep 2 && pip install git+https://github.com/cmi-dair
 - More validation
 - Patch cpac from git+URL directly
 - optionally wrap jobs in hpc_benchmark
-- Print full command after interactive use 
+- Print full command after interactive use

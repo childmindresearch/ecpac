@@ -532,7 +532,7 @@ singularity run \
 --mem_gb {cpac_memory_gb} \
 --participant_label {subject} \
 {pipeline} \
-{extra_cpac_args} 
+{extra_cpac_args}
 """
 
 BASH_TEMPLATE_PIPELINE_PRECONFIG = "--preconfig {pipeline}"
