@@ -1,18 +1,29 @@
-# `ecpac`: Easy C-PAC execution on SLURM clusters
+# `ecpac`: Easy C-PAC execution on PSC ACCESS
 
-## Install
+## Install (first time only)
+
+Create a conda environment on PSC ACCESS:
 
 ```sh
-python3 -m venv ecpac
-source ecpac/bin/activate
-pip install git+https://github.com/nx10/ecpac.git
+module load anaconda3/2022.10
+conda create -n ecpac python=3.11
+pip install git+https://github.com/cmi-dair/ecpac.git
 ```
 
 ## Run
 
 ```sh
-source ecpac/bin/activate  # If not already activated
+module load anaconda3/2022.10
+conda activate ecpac
 ecpac # or: 'ecpac --help' for non-interactive use 
+```
+
+## Update
+
+```sh
+module load anaconda3/2022.10
+conda activate ecpac
+pip uninstall -y ecpac && sleep 2 && pip install git+https://github.com/cmi-dair/ecpac.git
 ```
 
 ## TODO

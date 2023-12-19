@@ -2,13 +2,14 @@ import dataclasses
 import itertools
 import os
 import pathlib as pl
+import re
 import stat
 import subprocess
 from datetime import datetime, timedelta
-from typing import Optional, List, Union
-import re
+from typing import List, Optional, Union
 
 import click
+from icons import icons
 
 ID_PIPELINE_DEFAULT = "default"
 FILENAME_JOB = "job.sh"
@@ -41,25 +42,6 @@ CPAC_PRECONFIGS = [
     "rodent",
 ]
 
-ICON_CHECK = "\U00002705"  # Check Mark
-ICON_CROSS = "\U0000274C"  # Cross Mark
-ICON_FOLDER = "\U0001F4C1"  # File Folder
-ICON_FILE = "\U0001F4C4"  # Page Facing Up
-ICON_JOB = "\U0001F4C3"  # Page with Curl
-ICON_IMAGE = "\U0001F5BC"  # Frame with Picture
-ICON_CPAC = "\U0001F4BE"  # Floppy Disk
-ICON_MEMORY = "\U0001F4C8"  # Chart with Upwards Trend
-ICON_THREADS = "\U0001F4E1"  # Electric Plug
-ICON_DURATION = "\U0001F552"  # Clock
-ICON_SAVE = "\U0001F4BE"  # Floppy Disk
-ICON_EXTRA_ARGS = "\U0001F4AC"  # Speech Balloon
-ICON_PIPELINE = "\U0001F6B0"  # Hammer and Wrench
-ICON_ANALYSIS_LEVEL = "\U0001F4C8"  # Chart with Upwards Trend
-ICON_LAUNCH = "\U0001f680"  # Rocket
-ICON_PREVIEW = "\U0001F50D"  # Magnifying Glass
-ICON_SINGULARITY = "\U0001F5BC"  # Frame with Picture
-ICON_SUBJECT = "\U0001F464"  # Bust in Silhouette
-
 
 @dataclasses.dataclass
 class FsPlan:
@@ -70,7 +52,7 @@ class FsPlan:
     contents_text: Optional[str] = None
     make_executable: bool = False
 
-    def apply(self):
+    def apply(self) -> None:
         if self.is_file:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             txt = "" if self.contents_text is None else self.contents_text
@@ -83,35 +65,31 @@ class FsPlan:
             self.path.mkdir(parents=True, exist_ok=True)
 
 
-def _bullet_str_list(list_: list):
+def _bullet_str_list(list_: list) -> str:
     return "\n".join([f" - {i}" for i in list_])
 
 
-def _cli_check_exist_file(path: pl.Path, label: str = ""):
+def _cli_check_exist_file(path: pl.Path, label: str = "") -> bool:
     if path.exists() and path.is_file():
         return True
     click.secho(f'Error: {label} file does not exist! "{path}"', fg="red")
     return False
 
 
-def _cli_check_exist_dir(path: pl.Path, label: str = ""):
+def _cli_check_exist_dir(path: pl.Path, label: str = "") -> bool:
     if path.exists() and path.is_dir():
         return True
     click.secho(f'Error: {label} directory does not exist! "{path}"', fg="red")
     return False
 
 
-def option_or_prompt(
-    opt: Optional[str], prompt: str, default: Optional[str] = None
-) -> str:
+def option_or_prompt(opt: Optional[str], prompt: str, default: Optional[str] = None) -> str:
     if opt is not None:
         return opt
     return click.prompt(prompt, default=default, type=str)
 
 
-def option_or_confirm(
-    opt: Optional[bool], prompt: str, default: Optional[bool] = False
-) -> bool:
+def option_or_confirm(opt: Optional[bool], prompt: str, default: Optional[bool] = False) -> bool:
     if opt is not None:
         return opt
     return click.confirm(prompt, default=default)
@@ -121,12 +99,7 @@ def option_truthy(opt: Optional[str]) -> Optional[bool]:
     if opt is None:
         return None
     opt_lower = opt.lower()
-    return (
-        opt_lower == "true"
-        or opt_lower == "y"
-        or opt_lower == "yes"
-        or opt_lower == "1"
-    )
+    return opt_lower == "true" or opt_lower == "y" or opt_lower == "yes" or opt_lower == "1"
 
 
 def timedelta_to_hms(t: timedelta) -> str:
@@ -155,13 +128,9 @@ def filesafe(f: str) -> str:
     type=str,
     help="Input directory (contains subject folders).",
 )
-@click.option(
-    "-o", "--output", "arg_output", type=str, help="Output directory (contains runs)."
-)
+@click.option("-o", "--output", "arg_output", type=str, help="Output directory (contains runs).")
 @click.option("-r", "--run", "arg_run", type=str, help="Run name.")
-@click.option(
-    "-g", "--image", "arg_image", type=str, help="Singularity image file (.sif)."
-)
+@click.option("-g", "--image", "arg_image", type=str, help="Singularity image file (.sif).")
 @click.option(
     "-s",
     "--subject",
@@ -183,12 +152,8 @@ def filesafe(f: str) -> str:
     type=str,
     help='Analysis level ("participant", "group", ' '"test_config").',
 )
-@click.option(
-    "-c", "--cpac", "arg_cpac", type=str, help="C-PAC folder for patching image."
-)
-@click.option(
-    "-m", "--memory_gb", "arg_memory_gb", type=str, help="Memory (GB) for each job."
-)
+@click.option("-c", "--cpac", "arg_cpac", type=str, help="C-PAC folder for patching image.")
+@click.option("-m", "--memory_gb", "arg_memory_gb", type=str, help="Memory (GB) for each job.")
 @click.option(
     "-t",
     "--threads",
@@ -231,10 +196,10 @@ def main(
     arg_duration_h: Optional[str] = None,
     arg_save_working_dir: Optional[str] = None,
     arg_extra_cpac_args: Optional[str] = None,
-):
+) -> None:
     if not PSC_PROJECT_USER.exists():
         click.secho(
-            f'Error: User directory does not exist! "{PSC_PROJECT_USER}" (This script is meant to run on PSC)',
+            f'Error: User directory does not exist! "{PSC_PROJECT_USER}" ' "(This script is meant to run on PSC)",
             fg="red",
         )
         if not click.confirm(click.style("Continue anyway?", fg="red"), default=False):
@@ -244,7 +209,7 @@ def main(
 
     run_id = option_or_prompt(
         opt=arg_run,
-        prompt=ICON_JOB + click.style("Run name", fg="blue"),
+        prompt=icons.ICON_JOB + click.style("Run name", fg="blue"),
         default=datetime.now().strftime("run_%y-%m-%d_%H-%M-%S"),
     )
 
@@ -253,8 +218,7 @@ def main(
     res_threads = int(
         option_or_prompt(
             opt=arg_threads,
-            prompt=ICON_THREADS
-            + click.style("Number of threads/cores (int)", fg="blue"),
+            prompt=icons.ICON_THREADS + click.style("Number of threads/cores (int)", fg="blue"),
             default=str(8),
         )
     )
@@ -262,10 +226,8 @@ def main(
     res_memory_gb = float(
         option_or_prompt(
             opt=arg_memory_gb,
-            prompt=ICON_MEMORY
-            + click.style(
-                "Memory (GB, float) (can not be more than 2*threads on PSC)", fg="blue"
-            ),
+            prompt=icons.ICON_MEMORY
+            + click.style("Memory (GB, float) (can not be more than 2*threads on PSC)", fg="blue"),
             default=f"{2 * res_threads:.1f}",
         )
     )
@@ -274,8 +236,7 @@ def main(
         hours=float(
             option_or_prompt(
                 opt=arg_duration_h,
-                prompt=ICON_DURATION
-                + click.style("Duration (hours, float)", fg="blue"),
+                prompt=icons.ICON_DURATION + click.style("Duration (hours, float)", fg="blue"),
                 default=f"{48.0:.1f}",
             )
         )
@@ -287,7 +248,7 @@ def main(
         path_image = pl.Path(
             option_or_prompt(
                 opt=arg_image,
-                prompt=ICON_SINGULARITY + click.style("Image file", fg="blue"),
+                prompt=icons.ICON_SINGULARITY + click.style("Image file", fg="blue"),
                 default=str(PSC_IMAGE_DEFAULT),
             )
         )
@@ -304,10 +265,7 @@ def main(
             path_cpac = pl.Path(arg_cpac)
         else:
             cpac_opt: str = click.prompt(
-                ICON_CPAC
-                + click.style(
-                    "C-PAC directory (empty to use image version)", fg="blue"
-                ),
+                icons.ICON_CPAC + click.style("C-PAC directory (empty to use image version)", fg="blue"),
                 default="",
                 type=str,
             )
@@ -329,7 +287,7 @@ def main(
         path_input = pl.Path(
             option_or_prompt(
                 opt=arg_input,
-                prompt=ICON_FOLDER + click.style("Input directory", fg="blue"),
+                prompt=icons.ICON_FOLDER + click.style("Input directory", fg="blue"),
             )
         )
 
@@ -342,14 +300,16 @@ def main(
         if arg_subject is None:
             subjects = [path.stem for path in path_input.iterdir() if path.is_dir()]
 
-            subjects = re.split('\s+', click.prompt(
-                ICON_SUBJECT
-                + click.style(f"Subjects (separate with space)", fg="blue"),
-                default=" ".join(subjects),
-            ))
+            subjects = re.split(
+                "\s+",
+                click.prompt(
+                    icons.ICON_SUBJECT + click.style("Subjects (separate with space)", fg="blue"),
+                    default=" ".join(subjects),
+                ),
+            )
 
         else:
-            subjects = re.split('\s+', arg_subject)
+            subjects = re.split("\s+", arg_subject)
 
         not_exist = []
         for sub in subjects:
@@ -372,19 +332,21 @@ def main(
     path_output = pl.Path(
         option_or_prompt(
             opt=arg_output,
-            prompt=ICON_FOLDER + click.style("Output directory", fg="blue"),
+            prompt=icons.ICON_FOLDER + click.style("Output directory", fg="blue"),
             default=str(PSC_OUTPUT_DEFAULT),
         )
     )
 
     # Pipeline configs
 
-    pipeline_ids = re.split('\s+', option_or_prompt(
-        opt=arg_pipeline,
-        prompt=ICON_PIPELINE
-        + click.style("Pipelines (separate with space)", fg="blue"),
-        default=ID_PIPELINE_DEFAULT,
-    ))
+    pipeline_ids = re.split(
+        "\s+",
+        option_or_prompt(
+            opt=arg_pipeline,
+            prompt=icons.ICON_PIPELINE + click.style("Pipelines (separate with space)", fg="blue"),
+            default=ID_PIPELINE_DEFAULT,
+        ),
+    )
 
     preconfig_ids: List[str] = []
     pipeline_config_files: List[str] = []
@@ -394,9 +356,7 @@ def main(
         else:
             pipeline_config_files.append(pipe)
             if not pl.Path(pipe).exists():
-                click.secho(
-                    f'Error: Pipeline config file does not exist! "{pipe}"', fg="red"
-                )
+                click.secho(f'Error: Pipeline config file does not exist! "{pipe}"', fg="red")
                 return
 
     if len(preconfig_ids) > 0 and len(pipeline_config_files) > 0:
@@ -429,8 +389,7 @@ def main(
             break
 
         click.secho(
-            f"Error: Analysis level invalid ({analysis_level})\n"
-            f'Must be one of: "{CPAC_ANALYSIS_LEVELS}"',
+            f"Error: Analysis level invalid ({analysis_level})\n" f'Must be one of: "{CPAC_ANALYSIS_LEVELS}"',
             fg="red",
         )
 
@@ -439,14 +398,14 @@ def main(
     save_working_dir = option_or_confirm(
         opt=option_truthy(arg_save_working_dir),
         default=False,
-        prompt=ICON_SAVE + click.style("Save working directory", fg="blue"),
+        prompt=icons.ICON_SAVE + click.style("Save working directory", fg="blue"),
     )
 
     # Extra cpac args
 
     extra_cpac_args = option_or_prompt(
         opt=arg_extra_cpac_args,
-        prompt=ICON_EXTRA_ARGS + click.style("Extra args to pass to C-PAC?", fg="blue"),
+        prompt=icons.ICON_EXTRA_ARGS + click.style("Extra args to pass to C-PAC?", fg="blue"),
         default="",
     )
 
@@ -472,15 +431,11 @@ def main(
         job = BASH_TEMPLATE_JOB.format(
             job_name=f"{run_id}_{pipe_id}_{sub}",
             stdout_file=path_stdout_log,
-            cpac_bin_opt=""
-            if not patch_cpac
-            else BASH_TEMPLATE_JOB_CPAC_BIN.format(cpac_bin=path_cpac.absolute()),
+            cpac_bin_opt="" if not patch_cpac else BASH_TEMPLATE_JOB_CPAC_BIN.format(cpac_bin=path_cpac.absolute()),
             wd=path_out.absolute(),
             subject=sub,
             pipeline=(
-                BASH_TEMPLATE_PIPELINE_PRECONFIG
-                if use_preconfigs
-                else BASH_TEMPLATE_PIPELINE_CONFIG_FILE
+                BASH_TEMPLATE_PIPELINE_PRECONFIG if use_preconfigs else BASH_TEMPLATE_PIPELINE_CONFIG_FILE
             ).format(pipeline=pipe),
             path_input=path_input.absolute(),
             path_output=path_out_full.absolute(),
@@ -494,9 +449,7 @@ def main(
             analysis_level=analysis_level,
         )
 
-        fs_plans.append(
-            FsPlan(path=path_job, is_file=True, contents_text=job, make_executable=True)
-        )
+        fs_plans.append(FsPlan(path=path_job, is_file=True, contents_text=job, make_executable=True))
         fs_plans.append(FsPlan(path=path_out_full, is_file=False))
         if save_working_dir:
             fs_plans.append(FsPlan(path=path_out_wd, is_file=False))
@@ -524,9 +477,7 @@ def main(
 
     # User sanity check
 
-    click.secho(
-        ICON_FOLDER + f"The following directories and files will be created:", bg="blue"
-    )
+    click.secho(icons.ICON_FOLDER + "The following directories and files will be created:", bg="blue")
 
     fs_plans = sorted(fs_plans, key=lambda i: i.path.absolute().as_posix())
 
@@ -536,28 +487,24 @@ def main(
         style_fg = "green" if plan.is_file else "blue"
         click.secho(f" - [{label_type}{label_executable}] {plan.path}", fg=style_fg)
 
-    if click.confirm(
-        ICON_PREVIEW + click.style("Preview example job?", fg="blue"), default=False
-    ):
+    if click.confirm(icons.ICON_PREVIEW + click.style("Preview example job?", fg="blue"), default=False):
         print(example_job)
 
-    if not click.confirm(
-        ICON_SAVE + click.style("Create files + folders?", bg="blue"), default=None
-    ):
+    if not click.confirm(icons.ICON_SAVE + click.style("Create files + folders?", bg="blue"), default=None):
         return
 
     for plan in fs_plans:
         plan.apply()
 
-    if click.confirm(ICON_LAUNCH + click.style("Launch now?", bg="blue"), default=None):
+    if click.confirm(icons.ICON_LAUNCH + click.style("Launch now?", bg="blue"), default=None):
         subprocess.run([path_executor], shell=True)
 
-        click.secho(f"Jobs were executed!", bg="blue")
-        click.secho(f"Some commands you might find helpful:", fg="blue")
-        click.secho(f"  Follow job output:", fg="blue")
+        click.secho("Jobs were executed!", bg="blue")
+        click.secho("Some commands you might find helpful:", fg="blue")
+        click.secho("  Follow job output:", fg="blue")
         click.secho(f"tail -f {example_path_stdout_log}")
-        click.secho(f"  List all running jobs:", fg="blue")
-        click.secho(f"squeue --me")
+        click.secho("  List all running jobs:", fg="blue")
+        click.secho("squeue --me")
 
 
 BASH_TEMPLATE_JOB = """\
