@@ -14,6 +14,7 @@ Create a conda environment on PSC ACCESS:
 ```sh
 module load anaconda3/2022.10
 conda create -n ecpac python=3.11
+conda activate ecpac
 pip install git+https://github.com/cmi-dair/ecpac.git
 ```
 
