@@ -1,47 +1,16 @@
 import dataclasses
 import itertools
-import os
 import pathlib as pl
 import re
+import shlex
 import stat
 import subprocess
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import click
 
-from ecpac import icons
-
-ID_PIPELINE_DEFAULT = "default"
-FILENAME_JOB = "job.sh"
-FOLDERNAME_OUTPUT = "output"
-
-# Grab from $PROJECT, which is "/ocean/projects/{med000000p}/{username}"
-ENV_PROJECT = os.environ.get("PROJECT", "")
-PSC_PROJECT_USER = pl.Path(ENV_PROJECT)
-PSC_OUTPUT_DEFAULT = PSC_PROJECT_USER / "ecpac_runs"
-PSC_IMAGE_DEFAULT = PSC_PROJECT_USER / "images/cpac.sif"
-
-CPAC_ANALYSIS_LEVELS = ("participant", "group", "test_config")
-ANALYSIS_LEVEL_DEFAULT = "participant"
-CPAC_PRECONFIGS = [
-    "abcd-options",
-    "abcd-prep",
-    "anat-only",
-    "benchmark-FNIRT",
-    "blank",
-    "ccs-options",
-    "default",
-    "default-deprecated",
-    "fmriprep-options",
-    "fx-options",
-    "monkey",
-    "ndmg",
-    "nhp-macaque",
-    "preproc",
-    "rbc-options",
-    "rodent",
-]
+from ecpac import cli, consts, icons, utils
 
 
 @dataclasses.dataclass
@@ -64,61 +33,6 @@ class FsPlan:
                 self.path.chmod(self.path.stat().st_mode | stat.S_IEXEC)
         else:
             self.path.mkdir(parents=True, exist_ok=True)
-
-
-def _bullet_str_list(list_: list) -> str:
-    return "\n".join([f" - {i}" for i in list_])
-
-
-def _cli_check_exist_file(path: pl.Path, label: str = "") -> bool:
-    if path.exists() and path.is_file():
-        return True
-    click.secho(f'Error: {label} file does not exist! "{path}"', fg="red")
-    return False
-
-
-def _cli_check_exist_dir(path: pl.Path, label: str = "") -> bool:
-    if path.exists() and path.is_dir():
-        return True
-    click.secho(f'Error: {label} directory does not exist! "{path}"', fg="red")
-    return False
-
-
-def option_or_prompt(opt: Optional[str], prompt: str, default: Optional[str] = None) -> str:
-    if opt is not None:
-        return opt
-    return click.prompt(prompt, default=default, type=str)
-
-
-def option_or_confirm(opt: Optional[bool], prompt: str, default: Optional[bool] = False) -> bool:
-    if opt is not None:
-        return opt
-    return click.confirm(prompt, default=default)
-
-
-def option_truthy(opt: Optional[str]) -> Optional[bool]:
-    if opt is None:
-        return None
-    opt_lower = opt.lower()
-    return opt_lower == "true" or opt_lower == "y" or opt_lower == "yes" or opt_lower == "1"
-
-
-def timedelta_to_hms(t: timedelta) -> str:
-    s = t.total_seconds()
-    return f"{s // 3600:02.0f}:{s % 3600 // 60:02.0f}:{s % 60:02.0f}"
-
-
-def _cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
-    p = pl.Path(path)
-    return (
-        p.exists()
-        and (p / "dev/docker_data/run.py").exists()
-        and (p / "dev/docker_data/run-with-freesurfer.sh").exists()
-    )
-
-
-def filesafe(f: str) -> str:
-    return re.sub(r"[^a-zA-Z0-9_\-]", "_", f)
 
 
 @click.command()
@@ -198,9 +112,10 @@ def main(
     arg_save_working_dir: Optional[str] = None,
     arg_extra_cpac_args: Optional[str] = None,
 ) -> None:
-    if not PSC_PROJECT_USER.exists():
+    if not consts.PSC_PROJECT_USER.exists():
         click.secho(
-            f'Error: User directory does not exist! "{PSC_PROJECT_USER}" ' "(This script is meant to run on PSC)",
+            f'Error: User directory does not exist! "{consts.PSC_PROJECT_USER}" '
+            "(This script is meant to run on PSC)",
             fg="red",
         )
         if not click.confirm(click.style("Continue anyway?", fg="red"), default=False):
@@ -208,7 +123,7 @@ def main(
 
     # Run name
 
-    run_id = option_or_prompt(
+    run_id = cli.option_or_prompt(
         opt=arg_run,
         prompt=icons.ICON_JOB + click.style("Run name", fg="blue"),
         default=datetime.now().strftime("run_%y-%m-%d_%H-%M-%S"),
@@ -217,7 +132,7 @@ def main(
     # Resources
 
     res_threads = int(
-        option_or_prompt(
+        cli.option_or_prompt(
             opt=arg_threads,
             prompt=icons.ICON_THREADS + click.style("Number of threads/cores (int)", fg="blue"),
             default=str(8),
@@ -225,7 +140,7 @@ def main(
     )
 
     res_memory_gb = float(
-        option_or_prompt(
+        cli.option_or_prompt(
             opt=arg_memory_gb,
             prompt=icons.ICON_MEMORY
             + click.style("Memory (GB, float) (can not be more than 2*threads on PSC)", fg="blue"),
@@ -235,7 +150,7 @@ def main(
 
     res_duration = timedelta(
         hours=float(
-            option_or_prompt(
+            cli.option_or_prompt(
                 opt=arg_duration_h,
                 prompt=icons.ICON_DURATION + click.style("Duration (hours, float)", fg="blue"),
                 default=f"{48.0:.1f}",
@@ -247,14 +162,14 @@ def main(
 
     while True:
         path_image = pl.Path(
-            option_or_prompt(
+            cli.option_or_prompt(
                 opt=arg_image,
                 prompt=icons.ICON_SINGULARITY + click.style("Image file", fg="blue"),
-                default=str(PSC_IMAGE_DEFAULT),
+                default=str(consts.PSC_IMAGE_DEFAULT),
             )
         )
 
-        if _cli_check_exist_file(path_image, label="Singularity image"):
+        if cli.check_exist_file(path_image, label="Singularity image"):
             break
         arg_image = None
 
@@ -277,7 +192,7 @@ def main(
                 patch_cpac = True
                 path_cpac = pl.Path(cpac_opt)
 
-        if not patch_cpac or _cpac_dir_valid(path_cpac):
+        if not patch_cpac or utils.cpac_dir_valid(path_cpac):
             break
         else:
             click.secho(f'Error: Not a valid cpac dir! "{path_cpac}"', fg="red")
@@ -286,13 +201,13 @@ def main(
 
     while True:
         path_input = pl.Path(
-            option_or_prompt(
+            cli.option_or_prompt(
                 opt=arg_input,
                 prompt=icons.ICON_FOLDER + click.style("Input directory", fg="blue"),
             )
         )
 
-        if _cli_check_exist_dir(path_input, label="Input"):
+        if cli.check_exist_dir(path_input, label="Input"):
             break
 
     # Subjects
@@ -302,7 +217,7 @@ def main(
             subjects = [path.stem for path in path_input.iterdir() if path.is_dir()]
 
             subjects = re.split(
-                "\s+",
+                r"\s+",
                 click.prompt(
                     icons.ICON_SUBJECT + click.style("Subjects (separate with space)", fg="blue"),
                     default=" ".join(subjects),
@@ -310,7 +225,7 @@ def main(
             )
 
         else:
-            subjects = re.split("\s+", arg_subject)
+            subjects = re.split(r"\s+", arg_subject)
 
         not_exist = []
         for sub in subjects:
@@ -331,28 +246,28 @@ def main(
     # Output directory
 
     path_output = pl.Path(
-        option_or_prompt(
+        cli.option_or_prompt(
             opt=arg_output,
             prompt=icons.ICON_FOLDER + click.style("Output directory", fg="blue"),
-            default=str(PSC_OUTPUT_DEFAULT),
+            default=str(consts.PSC_OUTPUT_DEFAULT),
         )
     )
 
     # Pipeline configs
 
     pipeline_ids = re.split(
-        "\s+",
-        option_or_prompt(
+        r"\s+",
+        cli.option_or_prompt(
             opt=arg_pipeline,
             prompt=icons.ICON_PIPELINE + click.style("Pipelines (separate with space)", fg="blue"),
-            default=ID_PIPELINE_DEFAULT,
+            default=consts.ID_PIPELINE_DEFAULT,
         ),
     )
 
     preconfig_ids: List[str] = []
     pipeline_config_files: List[str] = []
     for pipe in pipeline_ids:
-        if pipe in CPAC_PRECONFIGS:
+        if pipe in consts.CPAC_PRECONFIGS:
             preconfig_ids.append(pipe)
         else:
             pipeline_config_files.append(pipe)
@@ -363,8 +278,8 @@ def main(
     if len(preconfig_ids) > 0 and len(pipeline_config_files) > 0:
         click.secho(
             f"Error: Can not mix preconfigs and pipeline config files!\n"
-            f"Preconfigs: {_bullet_str_list(preconfig_ids)}\n"
-            f"Pipeline config files: {_bullet_str_list(pipeline_config_files)}",
+            f"Preconfigs: {utils.bullet_str_list(preconfig_ids)}\n"
+            f"Pipeline config files: {utils.bullet_str_list(pipeline_config_files)}",
             fg="red",
         )
         return
@@ -380,35 +295,56 @@ def main(
     # Analysis level
 
     while True:
-        analysis_level = option_or_prompt(
+        analysis_level = cli.option_or_prompt(
             opt=arg_analysis_level,
-            prompt=click.style(f"Analysis level {CPAC_ANALYSIS_LEVELS}", fg="blue"),
-            default=ANALYSIS_LEVEL_DEFAULT,
+            prompt=click.style(f"Analysis level {consts.CPAC_ANALYSIS_LEVELS}", fg="blue"),
+            default=consts.ANALYSIS_LEVEL_DEFAULT,
         )
 
-        if analysis_level in CPAC_ANALYSIS_LEVELS:
+        if analysis_level in consts.CPAC_ANALYSIS_LEVELS:
             break
 
         click.secho(
-            f"Error: Analysis level invalid ({analysis_level})\n" f'Must be one of: "{CPAC_ANALYSIS_LEVELS}"',
+            f"Error: Analysis level invalid ({analysis_level})\n" f'Must be one of: "{consts.CPAC_ANALYSIS_LEVELS}"',
             fg="red",
         )
 
     # Save C-PAC working dir
 
-    save_working_dir = option_or_confirm(
-        opt=option_truthy(arg_save_working_dir),
+    save_working_dir = cli.option_or_confirm(
+        opt=utils.option_truthy(arg_save_working_dir),
         default=False,
         prompt=icons.ICON_SAVE + click.style("Save working directory", fg="blue"),
     )
 
     # Extra cpac args
 
-    extra_cpac_args = option_or_prompt(
+    extra_cpac_args = cli.option_or_prompt(
         opt=arg_extra_cpac_args,
         prompt=icons.ICON_EXTRA_ARGS + click.style("Extra args to pass to C-PAC?", fg="blue"),
         default="",
     )
+
+    # Reconstruct ecpac cli call
+
+    reargs: list[str] = ["ecpac"]
+    # Don't add run_id, if the user runs ecpac again, they should always change it
+    # reargs.extend(["--run", run_id])
+    reargs.extend(["--input", str(path_input)])
+    reargs.extend(["--output", str(path_output)])
+    reargs.extend(["--image", str(path_image)])
+    reargs.extend(["--subject", " ".join(subjects)])
+    reargs.extend(["--pipeline", " ".join(pipeline_ids)])
+    reargs.extend(["--analysis_level", analysis_level])
+    if patch_cpac:
+        reargs.extend(["--cpac", str(path_cpac)])
+    reargs.extend(["--memory_gb", str(res_memory_gb)])
+    reargs.extend(["--threads", str(res_threads)])
+    reargs.extend(["--duration_h", str(res_duration.total_seconds() / 3600)])
+    if save_working_dir:
+        reargs.extend(["--save_working_dir", "true"])
+    if len(extra_cpac_args) > 0:
+        reargs.extend(["--extra_cpac_args", extra_cpac_args])
 
     # Plan out dirs and job files
 
@@ -429,20 +365,22 @@ def main(
         if save_working_dir:
             extra_args.append(f"--save_working_dir {path_out_wd.absolute()}")
 
-        job = BASH_TEMPLATE_JOB.format(
+        job = consts.BASH_TEMPLATE_JOB.format(
             job_name=f"{run_id}_{pipe_id}_{sub}",
             stdout_file=path_stdout_log,
-            cpac_bin_opt="" if not patch_cpac else BASH_TEMPLATE_JOB_CPAC_BIN.format(cpac_bin=path_cpac.absolute()),
+            cpac_bin_opt=""
+            if not patch_cpac
+            else consts.BASH_TEMPLATE_JOB_CPAC_BIN.format(cpac_bin=path_cpac.absolute()),
             wd=path_out.absolute(),
             subject=sub,
             pipeline=(
-                BASH_TEMPLATE_PIPELINE_PRECONFIG if use_preconfigs else BASH_TEMPLATE_PIPELINE_CONFIG_FILE
+                consts.BASH_TEMPLATE_PIPELINE_PRECONFIG if use_preconfigs else consts.BASH_TEMPLATE_PIPELINE_CONFIG_FILE
             ).format(pipeline=pipe),
             path_input=path_input.absolute(),
             path_output=path_out_full.absolute(),
             image=path_image.absolute(),
             threads=res_threads,
-            duration_str=timedelta_to_hms(res_duration),
+            duration_str=utils.timedelta_to_hms(res_duration),
             memory_mb=int(res_memory_gb * 1000),
             cpac_threads=max(res_threads - 1, 1),
             cpac_memory_gb=max(res_memory_gb - 1, 1),
@@ -472,6 +410,16 @@ def main(
             path=path_executor,
             is_file=True,
             contents_text=executor,
+            make_executable=True,
+        )
+    )
+
+    # Add reproducible ecpac call
+    fs_plans.append(
+        FsPlan(
+            path=path_output / run_id / "ecpac_call.sh",
+            is_file=True,
+            contents_text=shlex.join(reargs),
             make_executable=True,
         )
     )
@@ -507,44 +455,6 @@ def main(
         click.secho("  List all running jobs:", fg="blue")
         click.secho("squeue --me")
 
-
-BASH_TEMPLATE_JOB = """\
-#!/usr/bin/bash
-#SBATCH --job-name {job_name}
-#SBATCH --output {stdout_file}
-#SBATCH --nodes 1
-#SBATCH --partition RM-shared
-#SBATCH --time {duration_str}
-#SBATCH --ntasks-per-node {threads}
-#SBATCH --mem {memory_mb}
-
-set -x
-
-cd {wd}
-
-singularity run \
---cleanenv \
-{cpac_bin_opt} \
--B {path_input}:{path_input}:ro \
--B {path_output}:{path_output} \
-{image} {path_input} {path_output} {analysis_level} \
---skip_bids_validator \
---n_cpus {cpac_threads} \
---mem_gb {cpac_memory_gb} \
---participant_label {subject} \
-{pipeline} \
-{extra_cpac_args}
-"""
-
-BASH_TEMPLATE_PIPELINE_PRECONFIG = "--preconfig {pipeline}"
-BASH_TEMPLATE_PIPELINE_CONFIG_FILE = "--pipeline-file {pipeline}"
-
-
-BASH_TEMPLATE_JOB_CPAC_BIN = """\
--B {cpac_bin}/CPAC:/code/CPAC \
--B {cpac_bin}/dev/docker_data/run.py:/code/run.py \
--B {cpac_bin}/dev/docker_data:/cpac_resources \
-"""
 
 if __name__ == "__main__":
     main()
