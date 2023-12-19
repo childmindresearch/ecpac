@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
 import click
-from icons import icons
+
+from ecpac import icons
 
 ID_PIPELINE_DEFAULT = "default"
 FILENAME_JOB = "job.sh"
