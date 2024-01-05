@@ -371,25 +371,25 @@ def main(
             before_run = (
                 slack.slack_message_bash_mrkdwn(
                     f"Starting ecpac run:\n"
-                    f"Run: `{run_id}`\n"
-                    f'Pipeline: `{pipe_id}`"\n'
-                    f'Subject: `{sub}"`\n'
-                    f"Input: `{path_input.absolute()}`\n"
-                    f"Output: `{path_out.absolute()}`\n"
-                    f"Image: `{path_image.absolute()}`\n"
-                    f"Threads: {res_threads}\n"
-                    f"Memory: {res_memory_gb} GB\n"
-                    f"Analysis level: `{analysis_level}`"
+                    f"- Run: `{run_id}`\n"
+                    f"- Pipeline: `{pipe_id}`\n"
+                    f"- Subject: `{sub}`\n"
+                    f"- Input: `{path_input.absolute()}`\n"
+                    f"- Output: `{path_out.absolute()}`\n"
+                    f"- Image: `{path_image.absolute()}`\n"
+                    f"- Threads: {res_threads}\n"
+                    f"- Memory: {res_memory_gb} GB\n"
+                    f"- Analysis level: `{analysis_level}`"
                 )
                 + "\n\n"
             )
             after_run = "\n\n" + slack.slack_message_bash_mrkdwn(
                 f"Finished ecpac run:\n"
-                f"Run: `{run_id}`\n"
-                f'Pipeline: `{pipe_id}`"\n'
-                f'Subject: `{sub}"`\n'
-                f"Analysis level: `{analysis_level}`\n"
-                f"Output: `{path_out.absolute()}`\n"
+                f"- Run: `{run_id}`\n"
+                f"- Pipeline: `{pipe_id}`\n"
+                f"- Subject: `{sub}`\n"
+                f"- Analysis level: `{analysis_level}`\n"
+                f"- Output: `{path_out.absolute()}`\n"
             )
 
         job = consts.BASH_TEMPLATE_JOB.format(
