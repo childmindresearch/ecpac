@@ -1,3 +1,5 @@
+"""Unicode emojis used as icons."""
+
 ICON_CHECK = "\U00002705"  # Check Mark
 ICON_CROSS = "\U0000274C"  # Cross Mark
 ICON_FOLDER = "\U0001F4C1"  # File Folder

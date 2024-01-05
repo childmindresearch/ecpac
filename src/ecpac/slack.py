@@ -1,3 +1,5 @@
+"""Slack-related functions."""
+
 import json
 import os
 import shlex
@@ -15,7 +17,7 @@ def slack_message_bash(data: dict) -> str:
     if not slack_webhook_available():
         return ""
     return shlex.join(
-        ["curl", "-X", "POST", "-H", "Content-type: application/json", "--data", json.dumps(data), SLACK_WEBHOOK_URL]
+        ["curl", "-X", "POST", "-H", "Content-type: application/json", "--data", json.dumps(data), SLACK_WEBHOOK_URL],
     )
 
 

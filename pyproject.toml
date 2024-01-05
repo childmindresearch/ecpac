@@ -68,10 +68,13 @@ src = ["src"]
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["ANN", "E", "F", "I"]
+select = ["ALL"]
 ignore = [
   "ANN101",  # self should not be annotated.
-  "ANN102"  # cls should not be annotated.
+  "ANN102",  # cls should not be annotated.
+  "COM812",  # missing trailing comma in Python 3.5+
+  "ISC001",  # implicitly concatenated strings on a single line.
+  "T201"  # print
 ]
 fixable = ["ALL"]
 unfixable = []

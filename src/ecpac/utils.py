@@ -1,8 +1,9 @@
+"""Utility functions."""
+
 import datetime
 import os
 import pathlib as pl
 import re
-from typing import Optional, Union
 
 
 def filesafe(f: str) -> str:
@@ -10,9 +11,9 @@ def filesafe(f: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_\-]", "_", f)
 
 
-def option_truthy(opt: Optional[str]) -> Optional[bool]:
-    """
-    Convert a string option to a boolean option.
+def option_truthy(opt: str | None) -> bool | None:
+    """Convert a string option to a boolean option.
+
     Common truthy values like "true", "y", "yes", and "1" are converted to True.
     None is converted to None.
     All other values are converted to False.
@@ -20,7 +21,7 @@ def option_truthy(opt: Optional[str]) -> Optional[bool]:
     if opt is None:
         return None
     opt_lower = opt.lower()
-    return opt_lower == "true" or opt_lower == "y" or opt_lower == "yes" or opt_lower == "1"
+    return opt_lower in ("true", "y", "yes", "1")
 
 
 def timedelta_to_hms(t: datetime.timedelta) -> str:
@@ -34,7 +35,7 @@ def bullet_str_list(list_: list) -> str:
     return "\n".join([f" - {i}" for i in list_])
 
 
-def cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
+def cpac_dir_valid(path: str | os.PathLike) -> bool:
     """Check if a directory is a valid C-PAC source code directory."""
     p = pl.Path(path)
     return (
@@ -44,6 +45,6 @@ def cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
     )
 
 
-def bridges_gb_to_mb(gb: float | int) -> float | int:
+def bridges_gb_to_mb(gb: float) -> float:
     """ACCESS/Bridges uses 1000 MB per GB instead of 1024 MB per GB."""
     return gb * 1000

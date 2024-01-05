@@ -1,3 +1,5 @@
+"""Constants."""
+
 import os
 import pathlib as pl
 

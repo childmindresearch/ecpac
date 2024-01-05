@@ -1,3 +1,5 @@
+"""Main entry point for ecpac."""
+
 import dataclasses
 import itertools
 import math
@@ -7,7 +9,6 @@ import shlex
 import stat
 import subprocess
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 import click
 
@@ -16,18 +17,19 @@ from ecpac import cli, consts, icons, slack, utils
 
 @dataclasses.dataclass
 class FsPlan:
-    """Planned file system change"""
+    """Planned file system change."""
 
     path: pl.Path
     is_file: bool = False
-    contents_text: Optional[str] = None
+    contents_text: str | None = None
     make_executable: bool = False
 
     def apply(self) -> None:
+        """Apply the file system change."""
         if self.is_file:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             txt = "" if self.contents_text is None else self.contents_text
-            with open(self.path, "w", encoding="utf-8") as handle:
+            with self.path.open("w", encoding="utf-8") as handle:
                 handle.write(txt)
 
             if self.make_executable:
@@ -66,7 +68,7 @@ class FsPlan:
     "--analysis_level",
     "arg_analysis_level",
     type=str,
-    help='Analysis level ("participant", "group", ' '"test_config").',
+    help='Analysis level ("participant", "group", "test_config").',
 )
 @click.option("-c", "--cpac", "arg_cpac", type=str, help="C-PAC folder for patching image.")
 @click.option("-m", "--memory_gb", "arg_memory_gb", type=str, help="Memory (GB) for each job.")
@@ -98,21 +100,22 @@ class FsPlan:
     type=str,
     help="Additional arguments that will be passed to C-PAC.",
 )
-def main(
-    arg_input: Optional[str] = None,
-    arg_output: Optional[str] = None,
-    arg_run: Optional[str] = None,
-    arg_image: Optional[str] = None,
-    arg_subject: Optional[str] = None,
-    arg_pipeline: Optional[str] = None,
-    arg_analysis_level: Optional[str] = None,
-    arg_cpac: Optional[str] = None,
-    arg_memory_gb: Optional[str] = None,
-    arg_threads: Optional[str] = None,
-    arg_duration_h: Optional[str] = None,
-    arg_save_working_dir: Optional[str] = None,
-    arg_extra_cpac_args: Optional[str] = None,
+def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
+    arg_input: str | None = None,
+    arg_output: str | None = None,
+    arg_run: str | None = None,
+    arg_image: str | None = None,
+    arg_subject: str | None = None,
+    arg_pipeline: str | None = None,
+    arg_analysis_level: str | None = None,
+    arg_cpac: str | None = None,
+    arg_memory_gb: str | None = None,
+    arg_threads: str | None = None,
+    arg_duration_h: str | None = None,
+    arg_save_working_dir: str | None = None,
+    arg_extra_cpac_args: str | None = None,
 ) -> None:
+    """CLI entry point."""
     if not consts.PSC_PROJECT_USER.exists():
         click.secho(
             f'Error: User directory does not exist! "{consts.PSC_PROJECT_USER}" '
@@ -127,7 +130,7 @@ def main(
     run_id = cli.option_or_prompt(
         opt=arg_run,
         prompt=icons.ICON_JOB + click.style("Run name", fg="blue"),
-        default=datetime.now().strftime("run_%y-%m-%d_%H-%M-%S"),
+        default=datetime.now().strftime("run_%y-%m-%d_%H-%M-%S"),  # noqa: DTZ005
     )
 
     # Resources
@@ -138,7 +141,7 @@ def main(
             prompt=icons.ICON_THREADS
             + click.style(" Number of threads/cores (int) (C-PAC will get 1 less)", fg="blue"),
             default=str(8),
-        )
+        ),
     )
 
     res_memory_gb = float(
@@ -146,7 +149,7 @@ def main(
             opt=arg_memory_gb,
             prompt=icons.ICON_MEMORY + click.style(" Memory (GB, float) (C-PAC will get 1GB less)", fg="blue"),
             default=f"{2 * res_threads:.1f}",
-        )
+        ),
     )
 
     res_duration = timedelta(
@@ -155,8 +158,8 @@ def main(
                 opt=arg_duration_h,
                 prompt=icons.ICON_DURATION + click.style(" Duration (hours, float)", fg="blue"),
                 default=f"{48.0:.1f}",
-            )
-        )
+            ),
+        ),
     )
 
     # Image
@@ -167,7 +170,7 @@ def main(
                 opt=arg_image,
                 prompt=icons.ICON_SINGULARITY + click.style(" Image file", fg="blue"),
                 default=str(consts.PSC_IMAGE_DEFAULT),
-            )
+            ),
         )
 
         if cli.check_exist_file(path_image, label="Singularity image"):
@@ -195,8 +198,7 @@ def main(
 
         if not patch_cpac or utils.cpac_dir_valid(path_cpac):
             break
-        else:
-            click.secho(f'Error: Not a valid cpac dir! "{path_cpac}"', fg="red")
+        click.secho(f'Error: Not a valid cpac dir! "{path_cpac}"', fg="red")
 
     # Input directory
 
@@ -205,7 +207,7 @@ def main(
             cli.option_or_prompt(
                 opt=arg_input,
                 prompt=icons.ICON_FOLDER + click.style(" Input directory", fg="blue"),
-            )
+            ),
         )
 
         if cli.check_exist_dir(path_input, label="Input"):
@@ -251,7 +253,7 @@ def main(
             opt=arg_output,
             prompt=icons.ICON_FOLDER + click.style(" Output directory", fg="blue"),
             default=str(consts.PSC_OUTPUT_DEFAULT),
-        )
+        ),
     )
 
     # Pipeline configs
@@ -265,8 +267,8 @@ def main(
         ),
     )
 
-    preconfig_ids: List[str] = []
-    pipeline_config_files: List[str] = []
+    preconfig_ids: list[str] = []
+    pipeline_config_files: list[str] = []
     for pipe in pipeline_ids:
         if pipe in consts.CPAC_PRECONFIGS:
             preconfig_ids.append(pipe)
@@ -329,8 +331,6 @@ def main(
     # Reconstruct ecpac cli call
 
     reargs: list[str] = ["ecpac"]
-    # Don't add run_id, if the user runs ecpac again, they should always change it
-    # reargs.extend(["--run", run_id])
     reargs.extend(["--input", str(path_input)])
     reargs.extend(["--output", str(path_output)])
     reargs.extend(["--image", str(path_image)])
@@ -349,7 +349,7 @@ def main(
 
     # Plan out dirs and job files
 
-    fs_plans: List[FsPlan] = []
+    fs_plans: list[FsPlan] = []
     job_paths = []
     example_job = None
     example_path_stdout_log = None
@@ -362,7 +362,7 @@ def main(
         path_job = path_out / "run_job.sh"
         path_stdout_log = path_out / "out.log"
 
-        extra_args: List[str] = [extra_cpac_args]
+        extra_args: list[str] = [extra_cpac_args]
         if save_working_dir:
             extra_args.append(f"--save_working_dir {path_out_wd.absolute()}")
 
@@ -380,7 +380,7 @@ def main(
                     f"- Image: `{path_image.absolute()}`\n"
                     f"- Threads: {res_threads}\n"
                     f"- Memory: {res_memory_gb} GB\n"
-                    f"- Analysis level: `{analysis_level}`"
+                    f"- Analysis level: `{analysis_level}`",
                 )
                 + "\n\n"
             )
@@ -390,7 +390,7 @@ def main(
                 f"- Pipeline: `{pipe_id}`\n"
                 f"- Subject: `{sub}`\n"
                 f"- Analysis level: `{analysis_level}`\n"
-                f"- Output: `{path_out.absolute()}`\n"
+                f"- Output: `{path_out.absolute()}`\n",
             )
 
         # Adjust ressources for ACCESS limits
@@ -464,7 +464,7 @@ def main(
             is_file=True,
             contents_text=executor,
             make_executable=True,
-        )
+        ),
     )
 
     # Add reproducible ecpac call
@@ -474,7 +474,7 @@ def main(
             is_file=True,
             contents_text=shlex.join(reargs),
             make_executable=True,
-        )
+        ),
     )
 
     # User sanity check
@@ -499,7 +499,7 @@ def main(
         plan.apply()
 
     if click.confirm(icons.ICON_LAUNCH + click.style(" Launch now?", bg="blue"), default=None):
-        subprocess.run([path_executor], shell=True)
+        subprocess.run([path_executor], shell=True, check=False)  # noqa: S602
 
         click.secho("Jobs were executed!", bg="blue")
         click.secho("Some commands you might find helpful:", fg="blue")
