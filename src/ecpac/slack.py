@@ -6,12 +6,19 @@ SLACK_WEBHOOK_URL: str | None = os.environ.get("SLACK_WEBHOOK_URL")
 
 def slack_webhook_available() -> bool:
     """Check if a Slack webhook URL is available."""
-    return SLACK_WEBHOOK_URL is not None
+    return SLACK_WEBHOOK_URL is not None and len(SLACK_WEBHOOK_URL) > 0
 
 
-def slack_message_bash(text: str) -> str:
+def slack_message_bash(data: dict) -> str:
     """Generate a bash command to send a message to Slack."""
-    if SLACK_WEBHOOK_URL is None:
+    if not slack_webhook_available():
         return ""
-    data = json.dumps({"text": text})
-    return f"curl -X POST -H 'Content-type: application/json' --data '{data}' {SLACK_WEBHOOK_URL}"
+    return f"curl -X POST -H 'Content-type: application/json' --data '{json.dumps(data)}' {SLACK_WEBHOOK_URL}"
+
+
+def slack_message_bash_mrkdwn(text: str) -> str:
+    """Generate a bash command to send a message to Slack.
+
+    `mrkdwn` is not a typo but a Slack-specific markdown-like syntax.
+    """
+    return slack_message_bash({"text": text})
