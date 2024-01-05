@@ -45,6 +45,9 @@
             <li>
                     <a class="function" href="#cpac_dir_valid">cpac_dir_valid</a>
             </li>
+            <li>
+                    <a class="function" href="#bridges_gb_to_mb">bridges_gb_to_mb</a>
+            </li>
     </ul>
 
 
@@ -61,55 +64,63 @@
                     <h1 class="modulename">
 <a href="./../ecpac.html">ecpac</a><wbr>.utils    </h1>
 
-                
+                        <div class="docstring"><p>Utility functions.</p>
+</div>
+
                         <input id="mod-utils-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 
                         <label class="view-source-button" for="mod-utils-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">import</span> <span class="nn">datetime</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">import</span> <span class="nn">os</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">import</span> <span class="nn">pathlib</span> <span class="k">as</span> <span class="nn">pl</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">import</span> <span class="nn">re</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;Utility functions.&quot;&quot;&quot;</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="kn">import</span> <span class="nn">datetime</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="kn">import</span> <span class="nn">os</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="kn">import</span> <span class="nn">pathlib</span> <span class="k">as</span> <span class="nn">pl</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="kn">import</span> <span class="nn">re</span>
 </span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="k">def</span> <span class="nf">filesafe</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string to a file-safe string.&quot;&quot;&quot;</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9_\-]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="k">def</span> <span class="nf">filesafe</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string to a file-safe string.&quot;&quot;&quot;</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9_\-]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 </span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="k">def</span> <span class="nf">option_truthy</span><span class="p">(</span><span class="n">opt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd">    Convert a string option to a boolean option.</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">    Common truthy values like &quot;true&quot;, &quot;y&quot;, &quot;yes&quot;, and &quot;1&quot; are converted to True.</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="sd">    None is converted to None.</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">    All other values are converted to False.</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>        <span class="k">return</span> <span class="kc">None</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="n">opt_lower</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="k">return</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span> <span class="ow">or</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span> <span class="ow">or</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span> <span class="ow">or</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="k">def</span> <span class="nf">option_truthy</span><span class="p">(</span><span class="n">opt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string option to a boolean option.</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="sd">    Common truthy values like &quot;true&quot;, &quot;y&quot;, &quot;yes&quot;, and &quot;1&quot; are converted to True.</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">    None is converted to None.</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd">    All other values are converted to False.</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>        <span class="k">return</span> <span class="kc">None</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="n">opt_lower</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="k">return</span> <span class="n">opt_lower</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
 </span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="k">def</span> <span class="nf">timedelta_to_hms</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a timedelta to a string in the format HH:MM:SS.&quot;&quot;&quot;</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">3600</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="k">def</span> <span class="nf">timedelta_to_hms</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a timedelta to a string in the format HH:MM:SS.&quot;&quot;&quot;</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">3600</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="k">def</span> <span class="nf">bullet_str_list</span><span class="p">(</span><span class="n">list_</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a list of strings to a bulleted string.&quot;&quot;&quot;</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">list_</span><span class="p">])</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="k">def</span> <span class="nf">bullet_str_list</span><span class="p">(</span><span class="n">list_</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a list of strings to a bulleted string.&quot;&quot;&quot;</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">list_</span><span class="p">])</span>
 </span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="k">def</span> <span class="nf">cpac_dir_valid</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a directory is a valid C-PAC source code directory.&quot;&quot;&quot;</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="n">p</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="k">return</span> <span class="p">(</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>        <span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run-with-freesurfer.sh&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="p">)</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="k">def</span> <span class="nf">cpac_dir_valid</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a directory is a valid C-PAC source code directory.&quot;&quot;&quot;</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="n">p</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="k">return</span> <span class="p">(</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>        <span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run-with-freesurfer.sh&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="p">)</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="k">def</span> <span class="nf">bridges_gb_to_mb</span><span class="p">(</span><span class="n">gb</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;ACCESS/Bridges uses 1000 MB per GB instead of 1024 MB per GB.&quot;&quot;&quot;</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">gb</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -125,9 +136,9 @@
 
     </div>
     <a class="headerlink" href="#filesafe"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="filesafe-9"><a href="#filesafe-9"><span class="linenos"> 9</span></a><span class="k">def</span> <span class="nf">filesafe</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="filesafe-10"><a href="#filesafe-10"><span class="linenos">10</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string to a file-safe string.&quot;&quot;&quot;</span>
-</span><span id="filesafe-11"><a href="#filesafe-11"><span class="linenos">11</span></a>    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9_\-]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="filesafe-10"><a href="#filesafe-10"><span class="linenos">10</span></a><span class="k">def</span> <span class="nf">filesafe</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="filesafe-11"><a href="#filesafe-11"><span class="linenos">11</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string to a file-safe string.&quot;&quot;&quot;</span>
+</span><span id="filesafe-12"><a href="#filesafe-12"><span class="linenos">12</span></a>    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9_\-]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -141,28 +152,29 @@
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">option_truthy</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">opt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>:</span></span>
+        <span class="name">option_truthy</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">opt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="option_truthy-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#option_truthy"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="option_truthy-14"><a href="#option_truthy-14"><span class="linenos">14</span></a><span class="k">def</span> <span class="nf">option_truthy</span><span class="p">(</span><span class="n">opt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-</span><span id="option_truthy-15"><a href="#option_truthy-15"><span class="linenos">15</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="option_truthy-16"><a href="#option_truthy-16"><span class="linenos">16</span></a><span class="sd">    Convert a string option to a boolean option.</span>
-</span><span id="option_truthy-17"><a href="#option_truthy-17"><span class="linenos">17</span></a><span class="sd">    Common truthy values like &quot;true&quot;, &quot;y&quot;, &quot;yes&quot;, and &quot;1&quot; are converted to True.</span>
-</span><span id="option_truthy-18"><a href="#option_truthy-18"><span class="linenos">18</span></a><span class="sd">    None is converted to None.</span>
-</span><span id="option_truthy-19"><a href="#option_truthy-19"><span class="linenos">19</span></a><span class="sd">    All other values are converted to False.</span>
-</span><span id="option_truthy-20"><a href="#option_truthy-20"><span class="linenos">20</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="option_truthy-21"><a href="#option_truthy-21"><span class="linenos">21</span></a>    <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="option_truthy-22"><a href="#option_truthy-22"><span class="linenos">22</span></a>        <span class="k">return</span> <span class="kc">None</span>
-</span><span id="option_truthy-23"><a href="#option_truthy-23"><span class="linenos">23</span></a>    <span class="n">opt_lower</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-</span><span id="option_truthy-24"><a href="#option_truthy-24"><span class="linenos">24</span></a>    <span class="k">return</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span> <span class="ow">or</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span> <span class="ow">or</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;yes&quot;</span> <span class="ow">or</span> <span class="n">opt_lower</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="option_truthy-15"><a href="#option_truthy-15"><span class="linenos">15</span></a><span class="k">def</span> <span class="nf">option_truthy</span><span class="p">(</span><span class="n">opt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="option_truthy-16"><a href="#option_truthy-16"><span class="linenos">16</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string option to a boolean option.</span>
+</span><span id="option_truthy-17"><a href="#option_truthy-17"><span class="linenos">17</span></a>
+</span><span id="option_truthy-18"><a href="#option_truthy-18"><span class="linenos">18</span></a><span class="sd">    Common truthy values like &quot;true&quot;, &quot;y&quot;, &quot;yes&quot;, and &quot;1&quot; are converted to True.</span>
+</span><span id="option_truthy-19"><a href="#option_truthy-19"><span class="linenos">19</span></a><span class="sd">    None is converted to None.</span>
+</span><span id="option_truthy-20"><a href="#option_truthy-20"><span class="linenos">20</span></a><span class="sd">    All other values are converted to False.</span>
+</span><span id="option_truthy-21"><a href="#option_truthy-21"><span class="linenos">21</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="option_truthy-22"><a href="#option_truthy-22"><span class="linenos">22</span></a>    <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="option_truthy-23"><a href="#option_truthy-23"><span class="linenos">23</span></a>        <span class="k">return</span> <span class="kc">None</span>
+</span><span id="option_truthy-24"><a href="#option_truthy-24"><span class="linenos">24</span></a>    <span class="n">opt_lower</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="option_truthy-25"><a href="#option_truthy-25"><span class="linenos">25</span></a>    <span class="k">return</span> <span class="n">opt_lower</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Convert a string option to a boolean option.
-Common truthy values like "true", "y", "yes", and "1" are converted to True.
+            <div class="docstring"><p>Convert a string option to a boolean option.</p>
+
+<p>Common truthy values like "true", "y", "yes", and "1" are converted to True.
 None is converted to None.
 All other values are converted to False.</p>
 </div>
@@ -180,10 +192,10 @@ All other values are converted to False.</p>
 
     </div>
     <a class="headerlink" href="#timedelta_to_hms"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="timedelta_to_hms-27"><a href="#timedelta_to_hms-27"><span class="linenos">27</span></a><span class="k">def</span> <span class="nf">timedelta_to_hms</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="timedelta_to_hms-28"><a href="#timedelta_to_hms-28"><span class="linenos">28</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a timedelta to a string in the format HH:MM:SS.&quot;&quot;&quot;</span>
-</span><span id="timedelta_to_hms-29"><a href="#timedelta_to_hms-29"><span class="linenos">29</span></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
-</span><span id="timedelta_to_hms-30"><a href="#timedelta_to_hms-30"><span class="linenos">30</span></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">3600</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">&quot;</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="timedelta_to_hms-28"><a href="#timedelta_to_hms-28"><span class="linenos">28</span></a><span class="k">def</span> <span class="nf">timedelta_to_hms</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="timedelta_to_hms-29"><a href="#timedelta_to_hms-29"><span class="linenos">29</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a timedelta to a string in the format HH:MM:SS.&quot;&quot;&quot;</span>
+</span><span id="timedelta_to_hms-30"><a href="#timedelta_to_hms-30"><span class="linenos">30</span></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+</span><span id="timedelta_to_hms-31"><a href="#timedelta_to_hms-31"><span class="linenos">31</span></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">3600</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">s</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">02.0f</span><span class="si">}</span><span class="s2">&quot;</span>
 </span></pre></div>
 
 
@@ -203,9 +215,9 @@ All other values are converted to False.</p>
 
     </div>
     <a class="headerlink" href="#bullet_str_list"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="bullet_str_list-33"><a href="#bullet_str_list-33"><span class="linenos">33</span></a><span class="k">def</span> <span class="nf">bullet_str_list</span><span class="p">(</span><span class="n">list_</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="bullet_str_list-34"><a href="#bullet_str_list-34"><span class="linenos">34</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a list of strings to a bulleted string.&quot;&quot;&quot;</span>
-</span><span id="bullet_str_list-35"><a href="#bullet_str_list-35"><span class="linenos">35</span></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">list_</span><span class="p">])</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="bullet_str_list-34"><a href="#bullet_str_list-34"><span class="linenos">34</span></a><span class="k">def</span> <span class="nf">bullet_str_list</span><span class="p">(</span><span class="n">list_</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="bullet_str_list-35"><a href="#bullet_str_list-35"><span class="linenos">35</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a list of strings to a bulleted string.&quot;&quot;&quot;</span>
+</span><span id="bullet_str_list-36"><a href="#bullet_str_list-36"><span class="linenos">36</span></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">list_</span><span class="p">])</span>
 </span></pre></div>
 
 
@@ -219,24 +231,46 @@ All other values are converted to False.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">cpac_dir_valid</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+        <span class="name">cpac_dir_valid</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
 
                 <label class="view-source-button" for="cpac_dir_valid-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#cpac_dir_valid"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="cpac_dir_valid-38"><a href="#cpac_dir_valid-38"><span class="linenos">38</span></a><span class="k">def</span> <span class="nf">cpac_dir_valid</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="cpac_dir_valid-39"><a href="#cpac_dir_valid-39"><span class="linenos">39</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a directory is a valid C-PAC source code directory.&quot;&quot;&quot;</span>
-</span><span id="cpac_dir_valid-40"><a href="#cpac_dir_valid-40"><span class="linenos">40</span></a>    <span class="n">p</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="cpac_dir_valid-41"><a href="#cpac_dir_valid-41"><span class="linenos">41</span></a>    <span class="k">return</span> <span class="p">(</span>
-</span><span id="cpac_dir_valid-42"><a href="#cpac_dir_valid-42"><span class="linenos">42</span></a>        <span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-</span><span id="cpac_dir_valid-43"><a href="#cpac_dir_valid-43"><span class="linenos">43</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-</span><span id="cpac_dir_valid-44"><a href="#cpac_dir_valid-44"><span class="linenos">44</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run-with-freesurfer.sh&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-</span><span id="cpac_dir_valid-45"><a href="#cpac_dir_valid-45"><span class="linenos">45</span></a>    <span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="cpac_dir_valid-39"><a href="#cpac_dir_valid-39"><span class="linenos">39</span></a><span class="k">def</span> <span class="nf">cpac_dir_valid</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="cpac_dir_valid-40"><a href="#cpac_dir_valid-40"><span class="linenos">40</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a directory is a valid C-PAC source code directory.&quot;&quot;&quot;</span>
+</span><span id="cpac_dir_valid-41"><a href="#cpac_dir_valid-41"><span class="linenos">41</span></a>    <span class="n">p</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="cpac_dir_valid-42"><a href="#cpac_dir_valid-42"><span class="linenos">42</span></a>    <span class="k">return</span> <span class="p">(</span>
+</span><span id="cpac_dir_valid-43"><a href="#cpac_dir_valid-43"><span class="linenos">43</span></a>        <span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</span><span id="cpac_dir_valid-44"><a href="#cpac_dir_valid-44"><span class="linenos">44</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run.py&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</span><span id="cpac_dir_valid-45"><a href="#cpac_dir_valid-45"><span class="linenos">45</span></a>        <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s2">&quot;dev/docker_data/run-with-freesurfer.sh&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+</span><span id="cpac_dir_valid-46"><a href="#cpac_dir_valid-46"><span class="linenos">46</span></a>    <span class="p">)</span>
 </span></pre></div>
 
 
             <div class="docstring"><p>Check if a directory is a valid C-PAC source code directory.</p>
+</div>
+
+
+                </section>
+                <section id="bridges_gb_to_mb">
+                            <input id="bridges_gb_to_mb-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">bridges_gb_to_mb</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">gb</span><span class="p">:</span> <span class="nb">float</span></span><span class="return-annotation">) -> <span class="nb">int</span>:</span></span>
+
+                <label class="view-source-button" for="bridges_gb_to_mb-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#bridges_gb_to_mb"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="bridges_gb_to_mb-49"><a href="#bridges_gb_to_mb-49"><span class="linenos">49</span></a><span class="k">def</span> <span class="nf">bridges_gb_to_mb</span><span class="p">(</span><span class="n">gb</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="bridges_gb_to_mb-50"><a href="#bridges_gb_to_mb-50"><span class="linenos">50</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;ACCESS/Bridges uses 1000 MB per GB instead of 1024 MB per GB.&quot;&quot;&quot;</span>
+</span><span id="bridges_gb_to_mb-51"><a href="#bridges_gb_to_mb-51"><span class="linenos">51</span></a>    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">gb</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>ACCESS/Bridges uses 1000 MB per GB instead of 1024 MB per GB.</p>
 </div>
 
 
