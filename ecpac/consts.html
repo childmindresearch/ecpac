@@ -142,7 +142,7 @@
 </span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>
 </span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="s2">cd </span><span class="si">{wd}</span>
 </span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="s2">singularity run </span><span class="se">\</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="si">{before_run}</span><span class="s2">singularity run </span><span class="se">\</span>
 </span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="s2">--cleanenv </span><span class="se">\</span>
 </span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="si">{cpac_bin_opt}</span><span class="s2"> </span><span class="se">\</span>
 </span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="s2">-B </span><span class="si">{path_input}</span><span class="s2">:</span><span class="si">{path_input}</span><span class="s2">:ro </span><span class="se">\</span>
@@ -153,7 +153,7 @@
 </span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="s2">--mem_gb </span><span class="si">{cpac_memory_gb}</span><span class="s2"> </span><span class="se">\</span>
 </span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="s2">--participant_label </span><span class="si">{subject}</span><span class="s2"> </span><span class="se">\</span>
 </span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="si">{pipeline}</span><span class="s2"> </span><span class="se">\</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="si">{extra_cpac_args}</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="si">{extra_cpac_args}{after_run}</span>
 </span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="s2">&quot;&quot;&quot;</span>
 </span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>
 </span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="n">BASH_TEMPLATE_PIPELINE_PRECONFIG</span> <span class="o">=</span> <span class="s2">&quot;--preconfig </span><span class="si">{pipeline}</span><span class="s2">&quot;</span>
@@ -294,7 +294,7 @@
                     <div class="attr variable">
             <span class="name">BASH_TEMPLATE_JOB</span>        =
 <input id="BASH_TEMPLATE_JOB-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="BASH_TEMPLATE_JOB-view-value"></label><span class="default_value">&#39;#!/usr/bin/bash\n#SBATCH --job-name {job_name}\n#SBATCH --output {stdout_file}\n#SBATCH --nodes 1\n#SBATCH --partition RM-shared\n#SBATCH --time {duration_str}\n#SBATCH --ntasks-per-node {threads}\n#SBATCH --mem {memory_mb}\n\nset -x\n\ncd {wd}\n\nsingularity run --cleanenv {cpac_bin_opt} -B {path_input}:{path_input}:ro -B {path_output}:{path_output} {image} {path_input} {path_output} {analysis_level} --skip_bids_validator --n_cpus {cpac_threads} --mem_gb {cpac_memory_gb} --participant_label {subject} {pipeline} {extra_cpac_args}\n&#39;</span>
+            <label class="view-value-button pdoc-button" for="BASH_TEMPLATE_JOB-view-value"></label><span class="default_value">&#39;#!/usr/bin/bash\n#SBATCH --job-name {job_name}\n#SBATCH --output {stdout_file}\n#SBATCH --nodes 1\n#SBATCH --partition RM-shared\n#SBATCH --time {duration_str}\n#SBATCH --ntasks-per-node {threads}\n#SBATCH --mem {memory_mb}\n\nset -x\n\ncd {wd}\n\n{before_run}singularity run --cleanenv {cpac_bin_opt} -B {path_input}:{path_input}:ro -B {path_output}:{path_output} {image} {path_input} {path_output} {analysis_level} --skip_bids_validator --n_cpus {cpac_threads} --mem_gb {cpac_memory_gb} --participant_label {subject} {pipeline} {extra_cpac_args}{after_run}\n&#39;</span>
 
         
     </div>
