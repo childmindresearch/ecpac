@@ -33,3 +33,13 @@ def option_or_confirm(opt: bool | None, prompt: str, *, default: bool | None = F
     if opt is not None:
         return opt
     return click.confirm(prompt, default=default)
+
+
+def icon_message(icon: str, text: str) -> str:
+    """Styled message with a prefixed icon."""
+    return icon + " " + click.style(text, fg="blue")
+
+
+def icon_message_emph(icon: str, text: str) -> str:
+    """Styled message with a prefixed icon and emphasis."""
+    return icon + " " + click.style(text, bg="blue")

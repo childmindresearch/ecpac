@@ -45,6 +45,6 @@ def cpac_dir_valid(path: str | os.PathLike) -> bool:
     )
 
 
-def bridges_gb_to_mb(gb: float) -> float:
+def bridges_gb_to_mb(gb: float) -> int:
     """ACCESS/Bridges uses 1000 MB per GB instead of 1024 MB per GB."""
-    return gb * 1000
+    return int(gb * 1000)

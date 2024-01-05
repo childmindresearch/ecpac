@@ -16,6 +16,7 @@ def slack_message_bash(data: dict) -> str:
     """Generate a bash command to send a message to Slack."""
     if not slack_webhook_available():
         return ""
+    assert SLACK_WEBHOOK_URL is not None  # noqa: S101
     return shlex.join(
         ["curl", "-X", "POST", "-H", "Content-type: application/json", "--data", json.dumps(data), SLACK_WEBHOOK_URL],
     )

@@ -1,41 +1,17 @@
 """Main entry point for ecpac."""
 
-import dataclasses
 import itertools
 import math
 import pathlib as pl
 import re
 import shlex
-import stat
 import subprocess
 from datetime import datetime, timedelta
 
 import click
 
-from ecpac import cli, consts, icons, slack, utils
-
-
-@dataclasses.dataclass
-class FsPlan:
-    """Planned file system change."""
-
-    path: pl.Path
-    is_file: bool = False
-    contents_text: str | None = None
-    make_executable: bool = False
-
-    def apply(self) -> None:
-        """Apply the file system change."""
-        if self.is_file:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            txt = "" if self.contents_text is None else self.contents_text
-            with self.path.open("w", encoding="utf-8") as handle:
-                handle.write(txt)
-
-            if self.make_executable:
-                self.path.chmod(self.path.stat().st_mode | stat.S_IEXEC)
-        else:
-            self.path.mkdir(parents=True, exist_ok=True)
+from ecpac import bash_builder, cli, consts, icons, slack, utils
+from ecpac.fsplan import FsPlan
 
 
 @click.command()
@@ -138,8 +114,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
     res_threads = int(
         cli.option_or_prompt(
             opt=arg_threads,
-            prompt=icons.ICON_THREADS
-            + click.style(" Number of threads/cores (int) (C-PAC will get 1 less)", fg="blue"),
+            prompt=cli.icon_message(icons.ICON_THREADS, "Number of threads/cores (int) (C-PAC will get 1 less)"),
             default=str(8),
         ),
     )
@@ -147,7 +122,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
     res_memory_gb = float(
         cli.option_or_prompt(
             opt=arg_memory_gb,
-            prompt=icons.ICON_MEMORY + click.style(" Memory (GB, float) (C-PAC will get 1GB less)", fg="blue"),
+            prompt=cli.icon_message(icons.ICON_MEMORY, "Memory (GB, float) (C-PAC will get 1GB less)"),
             default=f"{2 * res_threads:.1f}",
         ),
     )
@@ -156,7 +131,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         hours=float(
             cli.option_or_prompt(
                 opt=arg_duration_h,
-                prompt=icons.ICON_DURATION + click.style(" Duration (hours, float)", fg="blue"),
+                prompt=cli.icon_message(icons.ICON_DURATION, "Duration (hours, float)"),
                 default=f"{48.0:.1f}",
             ),
         ),
@@ -168,7 +143,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         path_image = pl.Path(
             cli.option_or_prompt(
                 opt=arg_image,
-                prompt=icons.ICON_SINGULARITY + click.style(" Image file", fg="blue"),
+                prompt=cli.icon_message(icons.ICON_SINGULARITY, "Image file"),
                 default=str(consts.PSC_IMAGE_DEFAULT),
             ),
         )
@@ -185,7 +160,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
             path_cpac = pl.Path(arg_cpac)
         else:
             cpac_opt: str = click.prompt(
-                icons.ICON_CPAC + click.style(" C-PAC directory (empty to use image version)", fg="blue"),
+                cli.icon_message(icons.ICON_CPAC, "C-PAC directory (empty to use image version)"),
                 default="",
                 type=str,
             )
@@ -206,7 +181,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         path_input = pl.Path(
             cli.option_or_prompt(
                 opt=arg_input,
-                prompt=icons.ICON_FOLDER + click.style(" Input directory", fg="blue"),
+                prompt=cli.icon_message(icons.ICON_FOLDER, "Input directory"),
             ),
         )
 
@@ -222,7 +197,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
             subjects = re.split(
                 r"\s+",
                 click.prompt(
-                    icons.ICON_SUBJECT + click.style(" Subjects (separate with space)", fg="blue"),
+                    cli.icon_message(icons.ICON_SUBJECT, "Subjects (separate with space)"),
                     default=" ".join(subjects),
                 ),
             )
@@ -251,7 +226,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
     path_output = pl.Path(
         cli.option_or_prompt(
             opt=arg_output,
-            prompt=icons.ICON_FOLDER + click.style(" Output directory", fg="blue"),
+            prompt=cli.icon_message(icons.ICON_FOLDER, "Output directory"),
             default=str(consts.PSC_OUTPUT_DEFAULT),
         ),
     )
@@ -262,7 +237,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         r"\s+",
         cli.option_or_prompt(
             opt=arg_pipeline,
-            prompt=icons.ICON_PIPELINE + click.style(" Pipelines (separate with space)", fg="blue"),
+            prompt=cli.icon_message(icons.ICON_PIPELINE, "Pipelines (separate with space)"),
             default=consts.ID_PIPELINE_DEFAULT,
         ),
     )
@@ -300,7 +275,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
     while True:
         analysis_level = cli.option_or_prompt(
             opt=arg_analysis_level,
-            prompt=click.style(f"Analysis level {consts.CPAC_ANALYSIS_LEVELS}", fg="blue"),
+            prompt=icons.ICON_ANALYSIS_LEVEL + click.style(f" Analysis level {consts.CPAC_ANALYSIS_LEVELS}", fg="blue"),
             default=consts.ANALYSIS_LEVEL_DEFAULT,
         )
 
@@ -317,14 +292,14 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
     save_working_dir = cli.option_or_confirm(
         opt=utils.option_truthy(arg_save_working_dir),
         default=False,
-        prompt=icons.ICON_SAVE + click.style(" Save working directory", fg="blue"),
+        prompt=cli.icon_message(icons.ICON_SAVE, "Save working directory"),
     )
 
     # Extra cpac args
 
     extra_cpac_args = cli.option_or_prompt(
         opt=arg_extra_cpac_args,
-        prompt=icons.ICON_EXTRA_ARGS + click.style(" Extra args to pass to C-PAC?", fg="blue"),
+        prompt=cli.icon_message(icons.ICON_EXTRA_ARGS, "Extra args to pass to C-PAC?"),
         default="",
     )
 
@@ -366,10 +341,10 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         if save_working_dir:
             extra_args.append(f"--save_working_dir {path_out_wd.absolute()}")
 
-        before_run = ""
-        after_run = ""
+        before_run = None
+        after_run = None
         if slack.slack_webhook_available():
-            before_run = (
+            before_run = [
                 slack.slack_message_bash_mrkdwn(
                     f"Starting ecpac run:\n"
                     f"- Run: `{run_id}`\n"
@@ -382,16 +357,17 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
                     f"- Memory: {res_memory_gb} GB\n"
                     f"- Analysis level: `{analysis_level}`",
                 )
-                + "\n\n"
-            )
-            after_run = "\n\n" + slack.slack_message_bash_mrkdwn(
-                f"Finished ecpac run:\n"
-                f"- Run: `{run_id}`\n"
-                f"- Pipeline: `{pipe_id}`\n"
-                f"- Subject: `{sub}`\n"
-                f"- Analysis level: `{analysis_level}`\n"
-                f"- Output: `{path_out.absolute()}`\n",
-            )
+            ]
+            after_run = [
+                slack.slack_message_bash_mrkdwn(
+                    f"Finished ecpac run:\n"
+                    f"- Run: `{run_id}`\n"
+                    f"- Pipeline: `{pipe_id}`\n"
+                    f"- Subject: `{sub}`\n"
+                    f"- Analysis level: `{analysis_level}`\n"
+                    f"- Output: `{path_out.absolute()}`\n",
+                )
+            ]
 
         # Adjust ressources for ACCESS limits
         # - ACCESS fixes total memory to 2GB per thread
@@ -416,27 +392,24 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         job_memory_gb = res_memory_gb
         cpac_memory_gb = max(res_memory_gb - 1, 1)
 
-        job = consts.BASH_TEMPLATE_JOB.format(
+        job = bash_builder.job_template(
             job_name=f"{run_id}_{pipe_id}_{sub}",
-            stdout_file=path_stdout_log,
-            cpac_bin_opt=""
-            if not patch_cpac
-            else consts.BASH_TEMPLATE_JOB_CPAC_BIN.format(cpac_bin=path_cpac.absolute()),
+            job_stdout_file=path_stdout_log.absolute(),
+            job_duration_limit=res_duration,
+            job_threads=job_threads,
+            job_memory_gb=job_memory_gb,
             wd=path_out.absolute(),
-            subject=sub,
-            pipeline=(
-                consts.BASH_TEMPLATE_PIPELINE_PRECONFIG if use_preconfigs else consts.BASH_TEMPLATE_PIPELINE_CONFIG_FILE
-            ).format(pipeline=pipe),
             path_input=path_input.absolute(),
             path_output=path_out_full.absolute(),
-            image=path_image.absolute(),
-            duration_str=utils.timedelta_to_hms(res_duration),
-            threads=job_threads,
-            memory_mb=utils.bridges_gb_to_mb(job_memory_gb),
             cpac_threads=cpac_threads,
             cpac_memory_gb=cpac_memory_gb,
-            extra_cpac_args=" ".join(extra_args),
+            path_image=path_image.absolute(),
             analysis_level=analysis_level,
+            subject=sub,
+            pipeline=pipe,
+            pipeline_is_preconfig=use_preconfigs,
+            cpac_sources=path_cpac.absolute() if patch_cpac else None,
+            extra_cpac_args=" ".join(extra_args),
             before_run=before_run,
             after_run=after_run,
         )
@@ -454,7 +427,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
 
     # Plan executor file
 
-    sbatches = "\n".join([f"sbatch {j}" for j in job_paths])
+    sbatches = "\n".join([shlex.join(["sbatch", str(j.absolute())]) for j in job_paths])
     executor = f"#!/usr/bin/bash\n{sbatches}"
     path_executor = path_output / run_id / "run.sh"
 
@@ -472,14 +445,14 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         FsPlan(
             path=path_output / run_id / "ecpac_call.sh",
             is_file=True,
-            contents_text=shlex.join(reargs),
+            contents_text=f"{bash_builder.SCHEBANG}\n{shlex.join(reargs)}",
             make_executable=True,
         ),
     )
 
     # User sanity check
 
-    click.secho(icons.ICON_FOLDER + "The following directories and files will be created:", bg="blue")
+    click.secho(icons.ICON_FOLDER + " The following directories and files will be created:", bg="blue")
 
     fs_plans = sorted(fs_plans, key=lambda i: i.path.absolute().as_posix())
 
@@ -489,22 +462,22 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
         style_fg = "green" if plan.is_file else "blue"
         click.secho(f" - [{label_type}{label_executable}] {plan.path}", fg=style_fg)
 
-    if click.confirm(icons.ICON_PREVIEW + click.style("Preview example job?", fg="blue"), default=False):
+    if click.confirm(cli.icon_message(icons.ICON_PREVIEW, "Preview example job?"), default=False):
         print(example_job)
 
-    if not click.confirm(icons.ICON_SAVE + click.style("Create files + folders?", bg="blue"), default=None):
+    if not click.confirm(cli.icon_message_emph(icons.ICON_SAVE, "Create files + folders?"), default=None):
         return
 
     for plan in fs_plans:
         plan.apply()
 
-    if click.confirm(icons.ICON_LAUNCH + click.style(" Launch now?", bg="blue"), default=None):
+    if click.confirm(cli.icon_message_emph(icons.ICON_LAUNCH, "Launch now?"), default=None):
         subprocess.run([path_executor], shell=True, check=False)  # noqa: S602
 
         click.secho("Jobs were executed!", bg="blue")
         click.secho("Some commands you might find helpful:", fg="blue")
         click.secho("  Follow job output:", fg="blue")
-        click.secho(f"tail -f {example_path_stdout_log}")
+        click.secho(shlex.join(["tail", "-f", str(example_path_stdout_log)]), fg="blue")
         click.secho("  List all running jobs:", fg="blue")
         click.secho("squeue --me")
 
