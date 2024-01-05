@@ -28,6 +28,7 @@
     <li><a href="#install-first-time-only">Install (first time only)</a></li>
     <li><a href="#run">Run</a></li>
     <li><a href="#update">Update</a></li>
+    <li><a href="#slack-notifications">Slack notifications</a></li>
   </ul></li>
 </ul>
 
@@ -94,6 +95,15 @@ ecpac<span class="w"> </span><span class="c1"># or: &#39;ecpac --help&#39; for n
 <pre><span></span><code>module<span class="w"> </span>load<span class="w"> </span>anaconda3/2022.10
 conda<span class="w"> </span>activate<span class="w"> </span>ecpac
 pip<span class="w"> </span>uninstall<span class="w"> </span>-y<span class="w"> </span>ecpac<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sleep<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/cmi-dair/ecpac.git
+</code></pre>
+</div>
+
+<h2 id="slack-notifications">Slack notifications</h2>
+
+<p>To enable Slack notifications, create a Slack app and create a webhook URL. Then, set the following environment variable:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="nv">SLACK_WEBHOOK_URL</span><span class="o">=</span>...
 </code></pre>
 </div>
 </div>
