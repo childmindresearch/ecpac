@@ -342,7 +342,7 @@ def main(
     reargs.extend(["--threads", str(res_threads)])
     reargs.extend(["--duration_h", str(res_duration.total_seconds() / 3600)])
     if save_working_dir:
-        reargs.extend(["--save_working_dir", "true"])
+        reargs.extend(["--save_working_dir"])
     if len(extra_cpac_args) > 0:
         reargs.extend(["--extra_cpac_args", extra_cpac_args])
 
