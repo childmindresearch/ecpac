@@ -1,5 +1,6 @@
 import json
 import os
+import shlex
 
 SLACK_WEBHOOK_URL: str | None = os.environ.get("SLACK_WEBHOOK_URL")
 
@@ -13,7 +14,16 @@ def slack_message_bash(data: dict) -> str:
     """Generate a bash command to send a message to Slack."""
     if not slack_webhook_available():
         return ""
-    return f"curl -X POST -H 'Content-type: application/json' --data '{json.dumps(data)}' {SLACK_WEBHOOK_URL}"
+    return shlex.join([
+        "curl",
+        "-X",
+        "POST",
+        "-H",
+        "Content-type: application/json",
+        "--data",
+        json.dumps(data),
+        SLACK_WEBHOOK_URL
+    ])
 
 
 def slack_message_bash_mrkdwn(text: str) -> str:
