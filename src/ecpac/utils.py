@@ -42,3 +42,8 @@ def cpac_dir_valid(path: Union[str, os.PathLike]) -> bool:
         and (p / "dev/docker_data/run.py").exists()
         and (p / "dev/docker_data/run-with-freesurfer.sh").exists()
     )
+
+
+def bridges_gb_to_mb(gb: float | int) -> float | int:
+    """ACCESS/Bridges uses 1000 MB per GB instead of 1024 MB per GB."""
+    return gb * 1000
