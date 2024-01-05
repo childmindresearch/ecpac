@@ -47,7 +47,7 @@ set -x
 
 cd {wd}
 
-singularity run \
+{before_run}singularity run \
 --cleanenv \
 {cpac_bin_opt} \
 -B {path_input}:{path_input}:ro \
@@ -58,7 +58,7 @@ singularity run \
 --mem_gb {cpac_memory_gb} \
 --participant_label {subject} \
 {pipeline} \
-{extra_cpac_args}
+{extra_cpac_args}{after_run}
 """
 
 BASH_TEMPLATE_PIPELINE_PRECONFIG = "--preconfig {pipeline}"

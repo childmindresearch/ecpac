@@ -10,7 +10,7 @@ from typing import List, Optional
 
 import click
 
-from ecpac import cli, consts, icons, utils
+from ecpac import cli, consts, icons, slack, utils
 
 
 @dataclasses.dataclass
@@ -365,6 +365,19 @@ def main(
         if save_working_dir:
             extra_args.append(f"--save_working_dir {path_out_wd.absolute()}")
 
+        before_run = ""
+        after_run = ""
+        if slack.slack_webhook_available():
+            before_run = (
+                slack.slack_message_bash(
+                    f"Starting ecpac run:\n" f'Run: "{run_id}"\n' f'Pipeline "{pipe_id}"\n' f'Subject: "{sub}"'
+                )
+                + "\n\n"
+            )
+            after_run = "\n\n" + slack.slack_message_bash(
+                f"Finished ecpac run:\n" f'Run: "{run_id}"\n' f'Pipeline "{pipe_id}"\n' f'Subject: "{sub}"'
+            )
+
         job = consts.BASH_TEMPLATE_JOB.format(
             job_name=f"{run_id}_{pipe_id}_{sub}",
             stdout_file=path_stdout_log,
@@ -386,6 +399,8 @@ def main(
             cpac_memory_gb=max(res_memory_gb - 1, 1),
             extra_cpac_args=" ".join(extra_args),
             analysis_level=analysis_level,
+            before_run=before_run,
+            after_run=after_run,
         )
 
         fs_plans.append(FsPlan(path=path_job, is_file=True, contents_text=job, make_executable=True))
