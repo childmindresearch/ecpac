@@ -33,3 +33,11 @@ module load anaconda3/2022.10
 conda activate ecpac
 pip uninstall -y ecpac && sleep 2 && pip install git+https://github.com/cmi-dair/ecpac.git
 ```
+
+## Slack notifications
+
+To enable Slack notifications, create a Slack app and create a webhook URL. Then, set the following environment variable:
+
+```sh
+SLACK_WEBHOOK_URL=...
+```
