@@ -94,8 +94,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
     """CLI entry point."""
     if not consts.PSC_PROJECT_USER.exists():
         click.secho(
-            f'Error: User directory does not exist! "{consts.PSC_PROJECT_USER}" '
-            "(This script is meant to run on PSC)",
+            f'Error: User directory does not exist! "{consts.PSC_PROJECT_USER}" (This script is meant to run on PSC)',
             fg="red",
         )
         if not click.confirm(click.style("Continue anyway?", fg="red"), default=False):
@@ -283,7 +282,7 @@ def main(  # noqa: C901, PLR0912, PLR0913, PLR0915
             break
 
         click.secho(
-            f"Error: Analysis level invalid ({analysis_level})\n" f'Must be one of: "{consts.CPAC_ANALYSIS_LEVELS}"',
+            f'Error: Analysis level invalid ({analysis_level})\nMust be one of: "{consts.CPAC_ANALYSIS_LEVELS}"',
             fg="red",
         )
 
